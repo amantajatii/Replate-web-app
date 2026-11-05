@@ -6,11 +6,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { ownerRequest, ownerToken, type Restaurant } from '../../../lib/menu-api'
 import type { ListingStatus, SurplusListing } from '../../../lib/listing-api'
 import MenuShell from '../menu/MenuShell'
+import OwnerChoiceGroup from '../OwnerChoiceGroup'
+import CustomerIcon from '../../customer/CustomerIcon'
 
 const statuses: Array<'Semua' | ListingStatus> = ['Semua', 'Active', 'Draft', 'Closed']
 const statusText: Record<ListingStatus, string> = { Active: 'Aktif', Draft: 'Draft', Closed: 'Ditutup' }
 const currency = (value: number) => `Rp ${value.toLocaleString('id-ID')}`
-const shortDate = (value: string) => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value))
+const shortDate = (value: string) => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Jakarta' }).format(new Date(value))
 const time = (value: string) => new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(value))
 
 export default function ListingsDashboard() {
@@ -76,13 +78,12 @@ export default function ListingsDashboard() {
     <MenuShell restaurant={restaurant?.name ?? 'Restoran Baru'} active="listing">
       <header className="listing-topbar">
         <div>
-          <small>{restaurant?.name ?? 'Partner Portal'}　›　Listing Surplus</small>
           <h1>Listing Surplus</h1>
           <p>Atur makanan surplus yang siap diselamatkan pelanggan.</p>
         </div>
-        <Link className="listing-button primary" href="/owner/listings/new/">＋ Buat Listing Baru</Link>
+        <Link className="listing-button primary" href="/owner/listings/new/"><CustomerIcon name="plus" />Buat listing</Link>
       </header>
-      <main className="listing-dashboard">
+      <div className="listing-dashboard">
         <section className="listing-stats" aria-label="Ringkasan listing">
           <article><small>Listing Aktif</small><strong>{active.length}</strong><span>Tayang di marketplace</span></article>
           <article><small>Porsi Tersedia</small><strong>{active.reduce((sum, item) => sum + item.availableQuantity, 0)}</strong><span>Siap diselamatkan</span></article>
@@ -91,11 +92,9 @@ export default function ListingsDashboard() {
         <section className="listing-table-panel">
           <div className="listing-panel-heading">
             <div><h2>Semua Listing</h2><p>Kelola stok dan jendela pickup surplus restoran.</p></div>
-            <label className="listing-search"><span aria-hidden="true">⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama menu..." aria-label="Cari nama menu" /></label>
+            <label className="listing-search"><CustomerIcon name="search" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cari nama menu..." aria-label="Cari nama menu" /></label>
           </div>
-          <div className="listing-filters" role="group" aria-label="Filter status listing">
-            {statuses.map((item) => <button key={item} className={status === item ? 'selected' : ''} onClick={() => setStatus(item)} type="button">{item === 'Semua' ? 'Semua' : statusText[item]}</button>)}
-          </div>
+          <OwnerChoiceGroup label="Filter status listing" className="listing-filters" value={status} onChange={setStatus} options={statuses.map((item) => ({ value: item, label: item === 'Semua' ? 'Semua' : statusText[item] }))} />
           {error && <p className="listing-alert" role="alert">{error}</p>}
           {loading ? <p className="listing-state">Memuat listing…</p> : !restaurant ? (
             <div className="listing-state"><h3>Profil restoran belum tersedia</h3><p>Buat profil restoran sebelum mempublikasikan surplus.</p><Link href="/owner/settings/">Atur Profil Restoran →</Link></div>
@@ -109,13 +108,13 @@ export default function ListingsDashboard() {
                 <td><span className={`listing-status ${item.status.toLowerCase()}`}>{statusText[item.status]}</span></td>
                 <td><strong>{currency(item.rescuePrice)}</strong><small>Normal {currency(item.normalPrice)}</small></td>
                 <td><strong>{item.availableQuantity} tersisa</strong><small>dari {item.initialQuantity} porsi</small></td>
-                <td><strong>{shortDate(item.pickupStart)}</strong><small>{time(item.pickupStart)}–{time(item.pickupEnd)} WIB</small></td>
+                <td><strong>{shortDate(item.pickupStart)}, {time(item.pickupStart)}</strong><small>s.d. {shortDate(item.pickupEnd)}, {time(item.pickupEnd)} WIB</small></td>
                 <td><div className="listing-row-actions"><Link href={`/owner/listings/new/?edit=${item.surplusListingId}`}>Ubah</Link>{item.status !== 'Closed' && <button type="button" disabled={closing === item.surplusListingId} onClick={() => void closeListing(item.surplusListingId)}>{closing === item.surplusListingId ? 'Menutup…' : 'Tutup'}</button>}</div></td>
               </tr>)}</tbody>
             </table></div>
           )}
         </section>
-      </main>
+      </div>
     </MenuShell>
   )
 }

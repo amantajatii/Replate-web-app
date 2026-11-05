@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { useState, type FormEvent } from 'react'
+import { ViewTransition, useState, type FormEvent } from 'react'
 import { apiUrl } from '../lib/api'
 import { saveSession, type Session } from '../lib/session'
+import CustomerIcon from './customer/CustomerIcon'
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset'
 type Role = 'Customer' | 'RestaurantOwner'
@@ -22,24 +23,8 @@ function Brand({ mode }: { mode: Mode }) {
           unoptimized
         />
       </div>
-      {mode === 'login' ? (
-        <>
-          <h1>Replate</h1>
-          <p>Makanan Baik, Lebih Sedikit Terbuang</p>
-        </>
-      ) : (
-        <>
-          <div className="auth-brand-badge">
-            ♻ Gerakan Peduli Pangan Bersama
-          </div>
-          <h1>Selamat Datang di Replate</h1>
-          <p>
-            Buat akun untuk selamatkan makanan lezat
-            <br />
-            bersama Replate
-          </p>
-        </>
-      )}
+      <h1>{mode === 'login' ? 'Selamat datang kembali.' : mode === 'register' ? 'Buat akun Replate.' : 'Replate'}</h1>
+      <p>{mode === 'login' ? 'Masuk dan lanjutkan langkah kecilmu untuk mengurangi makanan terbuang.' : mode === 'register' ? 'Mulai selamatkan makanan, atau kelola surplus restoranmu.' : 'Makanan baik, lebih sedikit terbuang.'}</p>
     </header>
   )
 }
@@ -59,12 +44,10 @@ function RoleChoices({
         onClick={() => onChange('Customer')}
         aria-pressed={role === 'Customer'}
       >
-        <span className="role-icon" aria-hidden="true">
-          ♟
-        </span>
+        <CustomerIcon name="profile" />
         <span>
           <strong>Customer</strong>
-          <small>Beli Makanan Surplus</small>
+          <small>Beli makanan surplus</small>
         </span>
       </button>
       <button
@@ -73,12 +56,10 @@ function RoleChoices({
         onClick={() => onChange('RestaurantOwner')}
         aria-pressed={role === 'RestaurantOwner'}
       >
-        <span className="role-icon" aria-hidden="true">
-          ▣
-        </span>
+        <CustomerIcon name="store" />
         <span>
           <strong>Pemilik Resto</strong>
-          <small>Kelola Surplus Menu</small>
+          <small>Kelola surplus menu</small>
         </span>
       </button>
     </div>
@@ -187,27 +168,41 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
   const isLogin = mode === 'login'
   const isRegister = mode === 'register'
   return (
-    <main className={`auth-page ${isRegister ? 'register-page' : ''}`}>
+    <main className={`auth-page ${(isLogin || isRegister) ? 'auth-entry' : ''} ${isRegister ? 'register-page' : ''}`}>
+      <div className="auth-frame">
+        {(isLogin || isRegister) && <aside className="auth-story" aria-label="Tentang Replate">
+          <Link href="/" className="auth-story-brand"><Image src="/Replate-logo.png" alt="" width={46} height={46} unoptimized /><strong>Replate</strong></Link>
+          <div className="auth-story-copy"><h2>Makanan baik.<br />Kesempatan baru.</h2><p>Hubungkan makanan surplus yang masih layak dengan orang yang ingin menikmatinya.</p></div>
+          <div className="auth-story-photo"><Image src="/menu/veggie.jpg" alt="Semangkuk makanan dengan sayuran segar" fill sizes="(max-width: 899px) 1px, 440px" unoptimized /></div>
+          <p className="auth-story-note"><CustomerIcon name="leaf" />Lebih sedikit terbuang, lebih banyak dinikmati.</p>
+        </aside>}
       <div className="auth-shell">
         <Brand mode={mode} />
         {(isLogin || isRegister) && (
           <nav className="auth-tabs" aria-label="Autentikasi">
-            <Link className={isLogin ? 'active' : ''} href="/login/">
+            <ViewTransition name="auth-tab-indicator" share="auth-tab-move" default="none"><span className={`auth-tab-indicator${isRegister ? ' at-register' : ''}`} aria-hidden="true" /></ViewTransition>
+            <ViewTransition name="auth-tab-login" share="auth-tab-label" default="none">
+            <Link className={isLogin ? 'active' : ''} aria-current={isLogin ? 'page' : undefined} href="/login/" transitionTypes={['auth-back']}>
               Masuk
             </Link>
-            <Link className={isRegister ? 'active' : ''} href="/register/">
+            </ViewTransition>
+            <ViewTransition name="auth-tab-register" share="auth-tab-label" default="none">
+            <Link className={isRegister ? 'active' : ''} aria-current={isRegister ? 'page' : undefined} href="/register/" transitionTypes={['auth-next']}>
               Daftar
             </Link>
+            </ViewTransition>
           </nav>
         )}
+        <ViewTransition key={mode} name="auth-form" share={{ default: 'none', 'auth-next': 'auth-slide-forward', 'auth-back': 'auth-slide-back' }} default="none">
         <form
-          className={`auth-form ${isRegister ? 'card' : ''}`}
+          className="auth-form"
+          aria-busy={pending}
           onSubmit={submit}
         >
           {(isLogin || isRegister) && (
             <div className="field-group">
               <div className="field-head">
-                <span>{isLogin ? 'Masuk Sebagai' : 'Pilih Peran Akun'}</span>
+                <span>{isLogin ? 'Masuk sebagai' : 'Daftar sebagai'}</span>
               </div>
               <RoleChoices role={role} onChange={setRole} />
             </div>
@@ -269,10 +264,11 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
             </label>
           )}
           {(isLogin || isRegister || mode === 'reset') && (
-            <label className="auth-field">
-              Kata Sandi <span>{isRegister && '*'}</span>
-              <span className="password-wrap">
+            <div className="auth-field">
+              <label htmlFor="auth-password">Kata sandi{isRegister && <span className="auth-required" aria-hidden="true"> *</span>}</label>
+              <div className="password-wrap">
                 <input
+                  id="auth-password"
                   required
                   minLength={isLogin ? undefined : 8}
                   maxLength={128}
@@ -287,16 +283,17 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-pressed={showPassword}
                   aria-label={
                     showPassword
                       ? 'Sembunyikan kata sandi'
                       : 'Tampilkan kata sandi'
                   }
                 >
-                  {showPassword ? '◉' : '◎'}
+                  <CustomerIcon name={showPassword ? 'eyeOff' : 'eye'} />
                 </button>
-              </span>
-            </label>
+              </div>
+            </div>
           )}
           {(isRegister || mode === 'reset') && (
             <label className="auth-field">
@@ -348,36 +345,23 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
                     : 'Simpan Kata Sandi'}
           </button>
         </form>
-        {(isLogin || isRegister) && (
-          <div className="auth-impact">
-            <span>♧</span>
-            <p>
-              {isLogin ? (
-                'Setiap makanan berlebih yang diselamatkan mengurangi jejak karbon bersama Replate.'
-              ) : (
-                <>
-                  <strong>1 Porsi = Kurangi Emisi Karbon</strong>
-                  <br />
-                  Bergabung dengan 12.000+ pahlawan penyelamat makanan di
-                  kotamu.
-                </>
-              )}
-            </p>
-          </div>
-        )}
+        </ViewTransition>
+        <ViewTransition name="auth-footer" share="auth-footer-move" default="none">
         <p className="auth-footer">
           {isLogin ? (
             <>
-              Belum punya akun? <Link href="/register/">Daftar</Link>
+              Belum punya akun? <Link href="/register/" transitionTypes={['auth-next']}>Daftar</Link>
             </>
           ) : isRegister ? (
             <>
-              Sudah punya akun? <Link href="/login/">Masuk</Link>
+              Sudah punya akun? <Link href="/login/" transitionTypes={['auth-back']}>Masuk</Link>
             </>
           ) : (
             <Link href="/login/">Kembali ke Masuk</Link>
           )}
         </p>
+        </ViewTransition>
+      </div>
       </div>
     </main>
   )

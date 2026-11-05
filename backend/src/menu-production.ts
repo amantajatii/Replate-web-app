@@ -118,6 +118,9 @@ export function addMenuRoutes(
       dotfiles: 'deny',
       immutable: true,
       maxAge: '1y',
+      setHeaders(response) {
+        response.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+      },
     }),
   )
   app.get(

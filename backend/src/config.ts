@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 const environmentSchema = z.object({
+  AI_SERVICE_KEY: z.string().min(32).optional(),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   JWT_ISSUER: z.string().min(1).default('Replate.Api'),
@@ -23,6 +24,7 @@ export function loadConfig(environment: NodeJS.ProcessEnv = process.env) {
     throw new Error('SMTP_USER, SMTP_PASSWORD, and SMTP_FROM are required when SMTP_HOST is set.')
   }
   return {
+    aiServiceKey: value.AI_SERVICE_KEY,
     databaseUrl: value.DATABASE_URL,
     frontendUrl: value.FRONTEND_URL,
     port: value.PORT,

@@ -22,3 +22,10 @@ backend/uploads/
 !.env.example
 .DS_Store
 backend/menu-uploads/
+
+# Python batch environments and generated reports
+.venv/
+__pycache__/
+AI/artifacts/
+
+*.tsbuildinfo

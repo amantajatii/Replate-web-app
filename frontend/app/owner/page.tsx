@@ -1,5 +1,5 @@
-import RoleHome from '../RoleHome'
+import MenuDashboard from './menu/MenuDashboard'
 
 export default function OwnerHome() {
-  return <RoleHome role="RestaurantOwner" />
+  return <MenuDashboard home />
 }

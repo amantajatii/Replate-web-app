@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import CustomerIcon from '../../customer/CustomerIcon'
 import {
   mediaUrl,
   ownerRequest,
@@ -12,6 +13,8 @@ import {
   type Restaurant,
 } from '../../../lib/menu-api'
 import MenuShell from './MenuShell'
+import OwnerChoiceGroup from '../OwnerChoiceGroup'
+import OwnerEmptyState from '../OwnerEmptyState'
 
 function today() {
   const now = new Date()
@@ -23,7 +26,8 @@ const emptyRecord = {
   surplusQuantity: 0,
 }
 
-export default function MenuDashboard() {
+export default function MenuDashboard({ home = false }: { home?: boolean }) {
+  const dialog = useRef<HTMLDialogElement>(null)
   const [token, setToken] = useState<string | null>(null)
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null)
   const [menus, setMenus] = useState<Menu[]>([])
@@ -43,7 +47,8 @@ export default function MenuDashboard() {
     const value = ownerToken()
     Promise.resolve().then(() => {
       setToken(value)
-      if (!value) setLoading(false)
+      setLoading(Boolean(value))
+      setError('')
     })
     if (!value) return
     ownerRequest<Restaurant[]>('/api/owner/restaurants', value)
@@ -73,6 +78,10 @@ export default function MenuDashboard() {
       )
       .finally(() => setLoading(false))
   }, [date, refresh])
+
+  useEffect(() => {
+    if (editing) dialog.current?.showModal()
+  }, [editing])
 
   const categories = useMemo(
     () => ['Semua', ...new Set(menus.map((menu) => menu.category))],
@@ -132,6 +141,7 @@ export default function MenuDashboard() {
           body: JSON.stringify(quantities),
         },
       )
+      dialog.current?.close()
       setEditing(null)
       setMessage('Catatan produksi tersimpan.')
       setRefresh((count) => count + 1)
@@ -145,32 +155,27 @@ export default function MenuDashboard() {
   }
 
   return (
-    <MenuShell restaurant={restaurant?.name ?? ''}>
+    <MenuShell restaurant={restaurant?.name ?? ''} active={home ? 'dashboard' : 'menu'}>
       <header className="menu-header">
         <div>
-          <small>{restaurant?.name || 'Restoran'}　/　Katalog & Dapur</small>
-          <h1>Menu & Catatan Produksi</h1>
+          <h1>{home ? 'Ringkasan restoran' : 'Menu & produksi'}</h1>
           <p>
             Pantau riwayat batch harian, volume penjualan, dan estimasi surplus
             makanan.
           </p>
         </div>
         <Link className="menu-primary" href="/owner/menu/new/">
-          ＋　Tambah Menu
+          <CustomerIcon name="plus" />Tambah menu
         </Link>
       </header>
       {loading ? (
         <p className="menu-notice">Memuat menu...</p>
       ) : !token ? (
-        <div className="menu-panel">
-          <h2>Masuk sebagai pemilik restoran</h2>
-          <Link href="/login/">Masuk</Link>
-        </div>
+        <OwnerEmptyState title="Masuk sebagai pemilik restoran" action={<Link href="/login/">Masuk</Link>} />
+      ) : error && !restaurant ? (
+        <OwnerEmptyState title="Data restoran belum dapat dimuat" action={<button className="menu-secondary" type="button" onClick={() => setRefresh((count) => count + 1)}>Coba lagi</button>}><span role="alert">{error}</span></OwnerEmptyState>
       ) : !restaurant ? (
-        <div className="menu-panel">
-          <h2>Buat profil restoran terlebih dahulu</h2>
-          <Link href="/owner/settings/">Buat Profil Restoran →</Link>
-        </div>
+        <OwnerEmptyState title="Restoranmu belum diatur" action={<Link className="menu-primary" href="/owner/settings/">Buat profil restoran</Link>}>Buat profil restoran untuk mulai menambahkan menu, mencatat produksi, dan menawarkan makanan surplus. Menu serta riwayat produksi akan muncul setelah kamu mengisinya.</OwnerEmptyState>
       ) : (
         <>
           {error && !editing && (
@@ -218,22 +223,11 @@ export default function MenuDashboard() {
           <div className="menu-toolbar">
             <input
               aria-label="Cari menu"
-              placeholder="⌕　Cari nama menu atau kategori..."
+              placeholder="Cari menu atau kategori…"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
-            <div className="menu-filters">
-              {categories.map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  className={category === item ? 'active' : ''}
-                  onClick={() => setCategory(item)}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+            <OwnerChoiceGroup label="Filtrasi kategori menu" className="menu-filters" value={category} onChange={setCategory} options={categories.map((item) => ({ value: item, label: item }))} />
             <input
               aria-label="Tanggal produksi"
               type="date"
@@ -245,7 +239,7 @@ export default function MenuDashboard() {
               aria-label="Muat ulang"
               onClick={() => setRefresh((count) => count + 1)}
             >
-              ↻
+              <CustomerIcon name="refresh" />
             </button>
           </div>
           <section className="menu-panel">
@@ -287,7 +281,7 @@ export default function MenuDashboard() {
                                 alt=""
                               />
                             ) : (
-                              <span className="menu-photo-empty">▣</span>
+                              <span className="menu-photo-empty"><CustomerIcon name="store" /></span>
                             )}
                             <div>
                               <strong>{menu.name}</strong>
@@ -330,7 +324,7 @@ export default function MenuDashboard() {
                               href={`/owner/menu/new/?edit=${menu.menuId}`}
                               aria-label={`Edit ${menu.name}`}
                             >
-                              ✎
+                              <CustomerIcon name="edit" />
                             </Link>
                             <button
                               type="button"
@@ -356,16 +350,9 @@ export default function MenuDashboard() {
           </section>
         </>
       )}
-      {editing && (
-        <div
-          className="menu-overlay"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setEditing(null)
-          }}
-        >
-          <form className="menu-dialog" onSubmit={saveProduction}>
-            <h2>Catat Produksi</h2>
+      <dialog ref={dialog} className="menu-dialog" aria-labelledby="production-dialog-title" onClose={() => setEditing(null)} onCancel={(event) => { if (busy) event.preventDefault() }}>
+        {editing && <form onSubmit={saveProduction}>
+            <h2 id="production-dialog-title">Catat produksi</h2>
             <p>
               {editing.name} · {date}
             </p>
@@ -423,16 +410,15 @@ export default function MenuDashboard() {
               </p>
             )}
             <div className="menu-dialog-actions">
-              <button type="button" onClick={() => setEditing(null)}>
+              <button type="button" disabled={busy} onClick={() => dialog.current?.close()}>
                 Batal
               </button>
               <button type="submit" disabled={busy}>
                 Simpan Produksi
               </button>
             </div>
-          </form>
-        </div>
-      )}
+          </form>}
+      </dialog>
     </MenuShell>
   )
 }

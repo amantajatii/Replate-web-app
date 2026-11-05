@@ -13,6 +13,7 @@ import {
   type Restaurant,
 } from '../../../../lib/menu-api'
 import MenuShell from '../MenuShell'
+import CustomerIcon from '../../../customer/CustomerIcon'
 
 const initial: MenuInput = {
   name: '',
@@ -196,14 +197,14 @@ export default function MenuForm() {
     <MenuShell restaurant={restaurant?.name ?? ''}>
       <form className="menu-form-page" onSubmit={save}>
         <div className="menu-form-top">
-          <Link href="/owner/menu/">←　Kembali</Link>
+          <Link href="/owner/menu/"><CustomerIcon name="back" />Kembali</Link>
           <small>
             Menu & Produksi　/　{menuId ? 'Edit Menu' : 'Tambah Menu Baru'}
           </small>
           <div>
             <Link href="/owner/menu/">Batal</Link>
             <button type="submit" disabled={busy || loading || !restaurant}>
-              ✓　Simpan Menu
+              <CustomerIcon name="check" />Simpan menu
             </button>
           </div>
         </div>
@@ -253,7 +254,7 @@ export default function MenuForm() {
                       />
                     </div>
                     <label className="menu-upload-action">
-                      ＋　Unggah Foto
+                      <CustomerIcon name="plus" />Unggah foto
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
@@ -464,7 +465,7 @@ export default function MenuForm() {
                     Isi Contoh Cepat
                   </button>
                   <button type="submit" disabled={busy}>
-                    ✓　Simpan Menu {menuId ? '' : 'Baru'}
+                    <CustomerIcon name="check" />Simpan menu {menuId ? '' : 'Baru'}
                   </button>
                 </div>
               </div>

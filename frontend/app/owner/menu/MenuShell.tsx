@@ -4,6 +4,17 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { clearSession } from '../../../lib/session'
+
+const navigation = [
+  ['dashboard', '/owner/', 'dashboard', 'Ringkasan'],
+  ['menu', '/owner/menu/', 'menu', 'Menu & produksi'],
+  ['listing', '/owner/listings/', 'listing', 'Listing surplus'],
+  ['orders', '/owner/orders/', 'orders', 'Pesanan'],
+  ['production', '/owner/production/', 'production', 'Riwayat produksi'],
+  ['insights', '/owner/insights/', 'ai', 'Analitik & AI'],
+  ['settings', '/owner/settings/', 'settings', 'Pengaturan restoran'],
+] as const
 
 export default function MenuShell({
   restaurant,
@@ -11,47 +22,37 @@ export default function MenuShell({
   children,
 }: {
   restaurant: string
-  active?: 'menu' | 'listing' | 'orders' | 'production'
+  active?: (typeof navigation)[number][0]
   children: ReactNode
 }) {
   const router = useRouter()
   return (
     <div className="menu-layout">
       <aside className="menu-sidebar">
-        <div className="menu-brand">
-          <Image src="/listing/brand.svg" alt="" width={40} height={40} />
+        <Link href="/owner/" className="menu-brand">
+          <Image src="/Replate-logo.png" alt="" width={40} height={40} unoptimized />
           <strong>Replate</strong>
-        </div>
+        </Link>
         <div className="menu-store">
           <span>{restaurant.slice(0, 2).toUpperCase() || 'RP'}</span>
           <div>
-            <strong>{restaurant || 'Restoran Baru'}</strong>
-            <small>Restaurant Owner</small>
+            <strong>{restaurant || 'Restoran belum diatur'}</strong>
+            <small>Pemilik restoran</small>
           </div>
         </div>
         <nav aria-label="Navigasi owner">
-          <Link href="/owner/"><Image src="/listing/dashboard.svg" alt="" width={20} height={20} />Dashboard</Link>
-          <Link className={active === 'menu' ? 'active' : ''} href="/owner/menu/">
-            <Image src="/listing/menu.svg" alt="" width={20} height={20} />Menu & Produksi
-          </Link>
-          <Link className={active === 'listing' ? 'active' : ''} href="/owner/listings/">
-            <Image src="/listing/listing.svg" alt="" width={20} height={20} />Buat Listing
-          </Link>
-          <Link className={active === 'orders' ? 'active' : ''} href="/owner/orders/"><Image src="/listing/orders.svg" alt="" width={20} height={20} />Pesanan</Link>
-          <Link className={active === 'production' ? 'active' : ''} href="/owner/production/"><Image src="/listing/production.svg" alt="" width={20} height={20} />Histori Produksi</Link>
-          <span><Image src="/listing/ai.svg" alt="" width={20} height={20} />Insight AI</span>
-          <Link href="/owner/settings/"><Image src="/listing/settings.svg" alt="" width={20} height={20} />Pengaturan</Link>
+          {navigation.map(([key, href, icon, label]) => <Link key={key} className={active === key ? 'active' : ''} aria-current={active === key ? 'page' : undefined} href={href}><Image src={`/listing/${icon}.svg`} alt="" width={20} height={20} />{label}</Link>)}
         </nav>
         <div className="menu-bottom">
           <button
             type="button"
+            aria-label="Keluar akun"
             onClick={() => {
-              sessionStorage.removeItem('replate-session')
-              localStorage.removeItem('replate-session')
-              router.push('/login/')
+              clearSession()
+              router.replace('/login/')
             }}
           >
-            <Image src="/listing/logout.svg" alt="" width={18} height={18} />Keluar Akun
+            <Image src="/listing/logout.svg" alt="" width={18} height={18} /><span>Keluar akun</span>
           </button>
         </div>
       </aside>

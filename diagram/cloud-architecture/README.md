@@ -1,3 +1,5 @@
+> Historical design proposal. Current implementation runs on an ordinary VPS with a private Python batch. See [AI implementation](../../AI/README.md) for the actual data, date, evaluation and API contract.
+
 ![Cloud Deployment Architecture Diagram](Cloud%20Deployment%20Architecture%20Diagram.png)
 # Catatan Pendamping Replate Cloud Deployment Architecture Diagram
 

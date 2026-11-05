@@ -198,7 +198,9 @@ it('scopes menu writes to the owner and rejects surplus beyond production', asyn
     .send(png)
   expect(uploaded.status).toBe(201)
   expect(uploaded.body.url).toMatch(/^\/menu-uploads\/1-[a-f0-9-]+\.png$/)
-  expect((await request(app).get(uploaded.body.url)).body).toEqual(png)
+  const photo = await request(app).get(uploaded.body.url)
+  expect(photo.body).toEqual(png)
+  expect(photo.headers['cross-origin-resource-policy']).toBe('cross-origin')
   expect(
     (
       await request(app)

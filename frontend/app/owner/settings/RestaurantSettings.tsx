@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { apiUrl } from '../../../lib/api'
+import MenuShell from '../menu/MenuShell'
+import OwnerChoiceGroup from '../OwnerChoiceGroup'
+import CustomerIcon from '../../customer/CustomerIcon'
 
 type Restaurant = {
   restaurantId?: number
@@ -86,7 +88,6 @@ async function request<T>(
 }
 
 export default function RestaurantSettings() {
-  const router = useRouter()
   const [bearer, setBearer] = useState<string | null>(null)
   const [restaurant, setRestaurant] = useState<Restaurant>(empty)
   const [saved, setSaved] = useState<Restaurant>(empty)
@@ -201,54 +202,8 @@ export default function RestaurantSettings() {
   const image = (url: string | null, fallback: string) =>
     url ? `${apiUrl}${url}` : fallback
   return (
-    <div className="rs-layout">
-      <aside className="rs-sidebar">
-        <div className="rs-brand">
-          <span className="rs-brand-mark">♻</span>
-          <span>
-            <strong>
-              Replate<span className="rs-dot">•</span>
-            </strong>
-            <small>PARTNER PORTAL</small>
-          </span>
-        </div>
-        <div className="rs-store">
-          <span>
-            {restaurant.name ? restaurant.name.slice(0, 2).toUpperCase() : 'RP'}
-          </span>
-          <div>
-            <strong>{restaurant.name || 'Restoran Baru'}</strong>
-            <small>Restaurant Owner</small>
-          </div>
-        </div>
-        <nav aria-label="Navigasi owner">
-          <Link href="/owner/">▦　Dashboard</Link>
-          <Link href="/owner/menu/">⚒　Menu & Produksi</Link>
-          <span>⊕　Buat Listing</span>
-          <span>▤　Kelola Pesanan</span>
-          <Link href="/owner/menu/">☷　Catatan Produksi</Link>
-          <span>✧　Insight AI</span>
-          <Link className="active" href="/owner/settings/">
-            ▣　Pengaturan Resto
-          </Link>
-        </nav>
-        <div className="rs-sidebar-bottom">
-          <span className="rs-live">
-            ●　Toko {restaurant.isOpen ? 'Aktif (Buka)' : 'Tutup'}
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              sessionStorage.removeItem('replate-session')
-              localStorage.removeItem('replate-session')
-              router.push('/login/')
-            }}
-          >
-            ↪　Keluar Akun
-          </button>
-        </div>
-      </aside>
-      <main className="rs-main">
+    <MenuShell restaurant={restaurant.name || 'Restoran baru'} active="settings">
+      <section className="rs-main">
         <div className="rs-top">
           <div>
             <div className="rs-crumb">
@@ -283,34 +238,16 @@ export default function RestaurantSettings() {
               type="submit"
               disabled={busy || loading || !bearer}
             >
-              ✓　{busy ? 'Menyimpan...' : 'Simpan Perubahan'}
+              <CustomerIcon name="check" />{busy ? 'Menyimpan…' : 'Simpan perubahan'}
             </button>
           </div>
         </div>
-        <div
-          className="rs-tabs"
-          role="tablist"
-          aria-label="Pengaturan restoran"
-        >
-          {(
-            [
-              ['profile', '▣　Profil & Lokasi'],
-              ['hours', '◷　Jam & Pickup'],
-              ['notifications', '♧　Notifikasi'],
-              ['security', '♙　Akun & Keamanan'],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              role="tab"
-              aria-selected={tab === key}
-              className={tab === key ? 'active' : ''}
-              onClick={() => setTab(key)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <OwnerChoiceGroup<Tab> tabs label="Pengaturan restoran" className="rs-tabs" value={tab} onChange={setTab} options={[
+          { value: 'profile', label: 'Profil & lokasi' },
+          { value: 'hours', label: 'Jam & pickup' },
+          { value: 'notifications', label: 'Notifikasi' },
+          { value: 'security', label: 'Akun & keamanan' },
+        ]} />
         {loading ? (
           <p>Memuat profil restoran...</p>
         ) : !bearer ? (
@@ -353,7 +290,7 @@ export default function RestaurantSettings() {
                         }}
                       >
                         <label className="rs-cover-button">
-                          ▣ Ubah Sampul
+                          Ubah sampul
                           <input
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
@@ -379,7 +316,7 @@ export default function RestaurantSettings() {
                       </div>
                       <div className="rs-photo-actions">
                         <label>
-                          ▣　Ganti Logo
+                          Ganti logo
                           <input
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
@@ -393,7 +330,7 @@ export default function RestaurantSettings() {
                             change('coverUrl', null)
                           }}
                         >
-                          ♜　Hapus
+                          Hapus
                         </button>
                       </div>
                       <small className="rs-hint">
@@ -532,7 +469,7 @@ export default function RestaurantSettings() {
                         />
                       </label>
                       <div className="rs-coords">
-                        ◎　Koordinat GPS{' '}
+                        Koordinat GPS{' '}
                         <strong>
                           {restaurant.latitude ?? '—'},{' '}
                           {restaurant.longitude ?? '—'}
@@ -541,7 +478,7 @@ export default function RestaurantSettings() {
                     </div>
                     <div>
                       <label className="rs-label">
-                        Pratinjau Peta Interaktif
+                        Lokasi pickup
                       </label>
                       <div
                         className="rs-map"
@@ -552,7 +489,7 @@ export default function RestaurantSettings() {
                           type="button"
                           onClick={() => setEditingPin(!editingPin)}
                         >
-                          ⌖ Ubah Pin Peta
+                          Ubah koordinat
                         </button>
                       </div>
                       {editingPin && (
@@ -707,7 +644,7 @@ export default function RestaurantSettings() {
             )}
           </form>
         )}
-      </main>
-    </div>
+      </section>
+    </MenuShell>
   )
 }

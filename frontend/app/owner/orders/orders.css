@@ -7,8 +7,6 @@
 .owner-order-controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin: 25px 0; }
 .owner-order-controls > div { display: flex; gap: 10px; flex-wrap: wrap; }
 .owner-orders button { border: 1px solid #d9d9d9; border-radius: 7px; padding: 8px 16px; background: white; font: inherit; cursor: pointer; }
-.owner-order-controls > div button { border-radius: 20px; background: #e9e9e9; }
-.owner-order-controls button.selected { background: #111; color: white; border-color: #111; }
 .owner-orders button:disabled, .owner-pickup-dialog button:disabled { opacity: .5; cursor: wait; }
 .owner-order-table { overflow-x: auto; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 10px; }
 .owner-order-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -35,3 +33,28 @@
 .owner-pickup-dialog form small { color: #69736d; }
 .owner-verify-button { margin-top: 8px; padding: 14px; border: 0; border-radius: 8px; background: #1f6b4f; color: white; font: inherit; font-weight: 700; cursor: pointer; }
 @media (max-width: 760px) { .owner-orders { padding: 24px 16px; } .owner-orders > header { align-items: start; flex-direction: column; } .owner-order-table { margin-right: -8px; margin-left: -8px; } }
+.owner-orders { max-width: 1440px; margin: auto; color: var(--ink); }
+.owner-orders h1 { letter-spacing: -.7px; line-height: 1.3; }
+.owner-orders header p, .owner-order-table td small, .owner-order-empty p { color: var(--muted); }
+.owner-orders select { min-height: 44px; border-color: var(--line); border-radius: 10px; color: var(--ink); font-size: 14px; }
+.owner-orders button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; border-color: var(--line); border-radius: 10px; color: var(--green); font-size: 13px; }
+.owner-orders button:hover:not(:disabled) { background: #eaf0e6; }
+.owner-order-table { padding: 0; border-color: var(--line); border-radius: 14px; }
+.owner-order-table table { min-width: 940px; font-size: 14px; }
+.owner-order-table th { padding: 16px; background: #f7f8f3; color: var(--muted); font-size: 12px; font-weight: 600; }
+.owner-order-table td { padding: 18px 16px; border-color: var(--line); font-variant-numeric: tabular-nums; }
+.owner-order-table td small { font-size: 12px; }
+.owner-order-table tbody tr:hover { background: #fbfcf8; }
+.owner-order-badge { border-radius: 6px; background: #eaf0e6; color: var(--green); }
+.owner-order-badge.status-pending { background: #f8edce; color: #72541b; }
+.owner-order-badge.status-cancelled { background: #fbece6; color: #923b25; }
+.owner-order-empty { display: grid; min-height: 280px; place-content: center; border: 1px dashed #c7d3c3; border-radius: 14px; padding: 32px; background: transparent; }
+.owner-order-empty p { max-width: 48ch; }
+.owner-pickup-dialog { color: #203b2e; line-height: 1.6; padding: 28px; }
+.owner-pickup-dialog header button { display: grid; flex: none; width: 44px; height: 44px; place-items: center; border-radius: 8px; color: #256044; }
+.owner-pickup-dialog :focus-visible { outline: 3px solid #256044; outline-offset: 3px; }
+.owner-pickup-dialog .customer-icon { width: 22px; height: 22px; }
+.owner-pickup-dialog input { min-height: 50px; border-color: #b5c4b7; }
+.owner-pickup-dialog form small { color: #647267; }
+.owner-verify-button { min-height: 48px; background: #256044; }
+@media (max-width: 760px) { .owner-orders { padding: 24px 20px; } .owner-orders h1 { font-size: 25px; } .owner-orders > header { gap: 20px; } .owner-orders header label, .owner-orders header select { width: 100%; } .owner-order-table { margin: 0; } }

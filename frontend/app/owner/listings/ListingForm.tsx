@@ -196,14 +196,13 @@ export default function ListingForm() {
       <header className="listing-form-topbar">
         <div>
           <div className="listing-breadcrumb"><Link href="/owner/">{restaurant?.name ?? 'Partner Portal'}</Link><Image src="/listing/crumb.svg" alt="" width={4} height={7} /><Link href="/owner/listings/">Listing Surplus</Link><Image src="/listing/crumb.svg" alt="" width={4} height={7} /><strong>{editId ? 'Ubah Listing' : 'Buat Listing Baru'}</strong></div>
-          <small>Route: /owner/listings/new</small>
         </div>
         <div className="listing-form-top-actions">
           <button type="button" form="surplus-listing-form" disabled={saving} onClick={(event) => { const form = event.currentTarget.form; if (form?.reportValidity()) void save('Draft', form) }}><Image src="/listing/draft.svg" alt="" width={10} height={14} />Simpan Draft</button>
           <button className="primary" type="submit" form="surplus-listing-form" disabled={saving}><Image src="/listing/publish.svg" alt="" width={14} height={14} />{saving ? 'Menyimpan…' : editId ? 'Simpan Perubahan' : 'Publikasikan Listing'}</button>
         </div>
       </header>
-      <main className="listing-form-page">
+      <div className="listing-form-page">
         <div className="listing-form-heading"><h1>{editId ? 'Ubah Listing Surplus' : 'Buat Surplus Listing Baru'}</h1><p>Publikasikan surplus makanan berlebih dari dapur Anda dengan harga terjangkau untuk pelanggan sekitar.</p></div>
         {loading ? <div className="listing-state">Memuat menu dan catatan produksi…</div> : !restaurant ? <div className="listing-state"><h2>Profil restoran belum tersedia</h2><p>Buat profil restoran sebelum membuat listing.</p><Link href="/owner/settings/">Atur Profil Restoran →</Link></div> : (
           <div className="listing-form-grid">
@@ -223,7 +222,7 @@ export default function ListingForm() {
               <section className="listing-card">
                 <div className="listing-section-heading"><div><span>2</span><h2>Penentuan Harga &amp; Diskon Otomatis</h2></div></div>
                 <div className="listing-price-grid"><label><span>Harga Normal Reguler</span><output>{currency(menu?.normalPrice ?? 0)}</output></label><label><span>Harga Surplus (Rp) <b>Diskon {discount}%</b></span><div className="listing-price-input"><span>Rp</span><input type="number" min="1" max={Math.max(1, (menu?.normalPrice ?? 1) - 1)} step="1" value={rescuePrice} onChange={(event) => setRescuePrice(event.target.value)} required aria-label="Harga surplus" /></div></label></div>
-                <div className="listing-recommendation"><Image src="/listing/discount.svg" alt="" width={22} height={22} /><span><strong>Rekomendasi Cerdas Replate:</strong> Diskon 40%–60% terbukti meningkatkan kecepatan reservasi pelanggan hingga 3x lipat sebelum jam tutup operasional dapur.</span></div>
+                <div className="listing-recommendation"><Image src="/listing/discount.svg" alt="" width={22} height={22} /><span><strong>Menentukan harga surplus:</strong> Pertimbangkan harga reguler, kondisi menu, dan sisa waktu pickup sebelum memilih diskon.</span></div>
               </section>
 
               <section className="listing-card">
@@ -259,7 +258,7 @@ export default function ListingForm() {
             </aside>
           </div>
         )}
-      </main>
+      </div>
     </MenuShell>
   )
 }

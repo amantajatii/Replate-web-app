@@ -1,3 +1,4 @@
+import type { RecommendationStore } from './ai-recommendations.js'
 import { PrismaMssql } from '@prisma/adapter-mssql'
 import { timingSafeEqual } from 'node:crypto'
 import { DuplicateEmailError, type NewUser, type PasswordResetStore, type UserStore } from './app.js'
@@ -448,5 +449,46 @@ export function createDatabase(databaseUrl: string) {
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable })
     },
   }
-  return { prisma, users, passwordResets, restaurants, menus, listings, marketplace }
+  const historyRange = (targetDate: string, days: number) => {
+    const end = new Date(`${targetDate}T00:00:00Z`)
+    return { gte: new Date(end.getTime() - days * 86400000), lt: end }
+  }
+  const recommendations: RecommendationStore = {
+    async training(targetDate, afterMenuId) {
+      const rows = await prisma.menu.findMany({
+        where: { isActive: true, menuId: { gt: afterMenuId } }, take: 50, orderBy: { menuId: 'asc' },
+        select: { menuId: true, name: true, restaurantId: true, restaurant: { select: { tagsJson: true } },
+          productionRecords: { where: { productionDate: historyRange(targetDate, 180) }, orderBy: { productionDate: 'asc' } } },
+      })
+      return rows.map(row => ({ menuId: row.menuId, name: row.name, restaurantId: row.restaurantId,
+        synthetic: (JSON.parse(row.restaurant.tagsJson) as string[]).includes('synthetic-demo'),
+        records: row.productionRecords.map(record => ({ productionDate: record.productionDate.toISOString().slice(0, 10),
+          producedQuantity: record.producedQuantity, soldQuantity: record.soldQuantity, surplusQuantity: record.surplusQuantity })) }))
+    },
+    async save(input) {
+      if (!await prisma.menu.findFirst({ where: { menuId: input.menuId, isActive: true }, select: { menuId: true } })) return false
+      const targetDate = new Date(`${input.targetDate}T00:00:00Z`)
+      const data = { ...input, targetDate, generatedAt: new Date() }
+      await prisma.productionRecommendation.upsert({
+        where: { menuId_targetDate: { menuId: input.menuId, targetDate } }, create: data, update: data,
+      })
+      return true
+    },
+    async dashboard(ownerId, restaurantId, targetDate) {
+      const restaurant = await prisma.restaurant.findFirst({ where: { restaurantId, ownerId }, select: { name: true, tagsJson: true } })
+      if (!restaurant) return null
+      const rows = await prisma.menu.findMany({ where: { restaurantId, isActive: true }, orderBy: { name: 'asc' },
+        select: { menuId: true, name: true,
+          productionRecords: { where: { productionDate: historyRange(targetDate, 180) }, orderBy: { productionDate: 'asc' } },
+          productionRecommendations: { where: { targetDate: new Date(`${targetDate}T00:00:00Z`) }, take: 1 } } })
+      return { restaurantId, name: restaurant.name, targetDate,
+        synthetic: (JSON.parse(restaurant.tagsJson) as string[]).includes('synthetic-demo'),
+        menus: rows.map(menu => ({ menuId: menu.menuId, name: menu.name,
+          records: menu.productionRecords.map(productionRecord),
+          recommendation: menu.productionRecommendations[0] ? {
+            ...menu.productionRecommendations[0], predictedDemand: menu.productionRecommendations[0].predictedDemand.toNumber(),
+          } : null })) }
+    },
+  }
+  return { prisma, users, passwordResets, restaurants, menus, listings, marketplace, recommendations }
 }

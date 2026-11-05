@@ -5,8 +5,10 @@ import { createMailer } from './mailer.js'
 import path from 'node:path'
 
 const config = loadConfig()
-const { prisma, users, passwordResets, restaurants, menus, listings, marketplace } = createDatabase(config.databaseUrl)
+const { prisma, users, passwordResets, restaurants, menus, listings, marketplace, recommendations } = createDatabase(config.databaseUrl)
 const app = createApp({
+  recommendations,
+  ...(config.aiServiceKey ? { aiServiceKey: config.aiServiceKey } : {}),
   users,
   passwordResets,
   restaurants,

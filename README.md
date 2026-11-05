@@ -4,7 +4,7 @@
   <img src="frontend/public/Replate-logo.png" alt="Logo Replate" width="240">
 </p>
 
-Replate adalah *food rescue marketplace* yang membantu restoran menjual makanan surplus yang masih layak konsumsi dengan harga lebih terjangkau. Data produksi dan surplus nantinya digunakan untuk memberi rekomendasi produksi dan mengurangi *food waste*.
+Replate adalah *food rescue marketplace* yang membantu restoran menjual makanan surplus yang masih layak konsumsi dengan harga lebih terjangkau. Data produksi dan surplus digunakan dalam pipeline analitik dan rekomendasi produksi per menu. Dampak terhadap *food waste* masih perlu diukur pada data operasional.
 
 ## Color palette
 
@@ -32,16 +32,20 @@ Harga, pickup code, jumlah, dan data dashboard menggunakan tabular numbers.
 ## Arsitektur
 
 ```text
-Replate-Senpro/
-├── frontend/   # Next.js static frontend → Azure Static Web Apps
-├── backend/    # Express REST API + Prisma → Azure App Service
+Replate-web-app/
+├── frontend/   # Next.js static frontend → Caddy di VPS
+├── backend/    # Express REST API + Prisma → Docker di VPS
 ├── diagram/    # ERD, use case, dan wireframe
 └── docs/       # Dokumentasi proyek
 ```
 
-Database menggunakan SQL Server secara lokal dan Azure SQL saat deployment. Frontend hanya berkomunikasi dengan database melalui REST API.
+Database menggunakan SQL Server secara lokal maupun pada rancangan deployment VPS. Frontend hanya berkomunikasi dengan database melalui REST API.
 
-Foto menu diunggah melalui backend dan disimpan sebagai berkas di direktori `MENU_UPLOAD_DIR` (default `menu-uploads` relatif terhadap direktori kerja backend). Azure SQL hanya menyimpan URL dan urutan foto pada tabel `MenuPhotos`, bukan isi berkas gambar. Untuk deployment Azure, penyimpanan berkas lokal ini perlu diganti dengan penyimpanan persisten.
+Foto menu diunggah melalui backend dan disimpan sebagai berkas di direktori `MENU_UPLOAD_DIR` (default `menu-uploads` relatif terhadap direktori kerja backend). SQL Server hanya menyimpan URL dan urutan foto pada tabel `MenuPhotos`, bukan isi berkas gambar. Konfigurasi VPS menggunakan volume persisten untuk foto.
+
+## Analitik & AI
+
+Halaman owner **Analitik & AI** menampilkan produksi, surplus, dan rekomendasi tersimpan. Pipeline Python memakai evaluasi berdasarkan urutan waktu dan pembanding weekday. [Panduan dan demo sintetis](AI/README.md) · [Deployment VPS](deploy/README.md). Tidak memerlukan Azure.
 
 ## Menjalankan aplikasi
 
@@ -116,7 +120,7 @@ Respons memuat `surplusListingId`, `restaurantId`, `menuId`, `menuName`, `availa
 
 ## Database migration
 
-Schema Prisma mencakup seluruh entitas pada ERD Replate. Untuk Azure SQL atau SQL Server yang masih kosong:
+Schema Prisma mencakup seluruh entitas pada ERD Replate. Untuk SQL Server yang masih kosong:
 
 ```bash
 pnpm --dir backend prisma:migrate
@@ -128,13 +132,9 @@ pnpm --dir backend prisma:migrate
 sqlserver://host:1433;database=Replate;user=user;password=password;encrypt=true
 ```
 
-## Rencana deployment Azure
+## Deployment VPS
 
-- Static output Next.js: Azure Static Web Apps.
-- Express API: Azure App Service dengan Node.js 24.
-- Database: Azure SQL Database.
-- `NEXT_PUBLIC_API_URL` diarahkan ke URL App Service.
-- `FRONTEND_URL` pada backend diarahkan ke origin Static Web Apps untuk CORS.
+[Konfigurasi Docker Compose, Caddy, volume persisten, dan timer batch AI](deploy/README.md) tersedia di `deploy/`. Frontend dan API berada di balik Caddy; SQL dan endpoint batch tidak dipublikasikan. Deployment ke server dan pengujian produksi belum dijalankan.
 
 ## Diagram
 

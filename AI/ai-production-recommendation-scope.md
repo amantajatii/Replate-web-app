@@ -1,3 +1,5 @@
+> Historical design proposal. Current implementation runs on an ordinary VPS with a private Python batch. See [AI implementation](README.md) for the actual data, date, evaluation and API contract.
+
 # AI Production Recommendation Scope
 
 ## 1. Deskripsi Fitur

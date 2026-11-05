@@ -16,8 +16,11 @@
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate deploy",
+    "db:seed-demo-food": "tsx --env-file-if-exists=.env scripts/seed-demo-food.ts",
     "db:check": "tsx --env-file-if-exists=.env scripts/check-database.ts",
-    "test:local-integration": "tsx --env-file-if-exists=.env scripts/test-local-integration.ts"
+    "test:local-integration": "tsx --env-file-if-exists=.env scripts/test-local-integration.ts",
+    "db:seed-ai-demo": "tsx --env-file-if-exists=.env scripts/seed-ai-demo.ts",
+    "test:ai-local": "tsx --env-file-if-exists=.env scripts/test-ai-local.ts"
   },
   "dependencies": {
     "@prisma/adapter-mssql": "7.10.0",

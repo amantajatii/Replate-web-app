@@ -1,0 +1,12 @@
+.git
+**/node_modules
+**/.next
+**/out
+**/dist
+**/.env*
+**/uploads
+**/menu-uploads
+**/__pycache__
+**/.venv
+AI/artifacts
+figma-make

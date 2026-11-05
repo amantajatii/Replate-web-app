@@ -1,3 +1,4 @@
+import { addRecommendationRoutes, type RecommendationStore } from './ai-recommendations.js'
 import cors from 'cors'
 import { createHash, randomBytes } from 'node:crypto'
 import express, { type RequestHandler } from 'express'
@@ -54,6 +55,8 @@ type Dependencies = {
   menus?: MenuStore
   menuUploadDir?: string
   listings?: ListingStore
+  recommendations?: RecommendationStore
+  aiServiceKey?: string
   marketplace?: MarketplaceStore
 }
 
@@ -97,7 +100,7 @@ function authResponse(user: User, jwtConfig: JwtConfig) {
   }
 }
 
-export function createApp({ users, passwordResets, sendPasswordReset, restaurants, uploadDir, jwt: jwtConfig, frontendUrl, authRateLimit = 10, menus, menuUploadDir, listings, marketplace }: Dependencies) {
+export function createApp({ users, passwordResets, sendPasswordReset, restaurants, uploadDir, jwt: jwtConfig, frontendUrl, authRateLimit = 10, menus, menuUploadDir, listings, marketplace, recommendations, aiServiceKey }: Dependencies) {
   if (Buffer.byteLength(jwtConfig.secret, 'utf8') < 32) throw new Error('JWT_SECRET must contain at least 32 bytes.')
   if (!jwtConfig.issuer || !jwtConfig.audience || jwtConfig.expiresMinutes < 1 || jwtConfig.expiresMinutes > 1440) {
     throw new Error('JWT issuer, audience, or expiry configuration is invalid.')
@@ -222,6 +225,7 @@ export function createApp({ users, passwordResets, sendPasswordReset, restaurant
     response.json({ role: 'RestaurantOwner' })
   })
 
+  if (recommendations) addRecommendationRoutes(app, recommendations, requireRole('RestaurantOwner'), aiServiceKey)
   if (restaurants) addRestaurantRoutes(app, restaurants, requireRole('RestaurantOwner'), uploadDir ?? 'uploads')
   if (menus && menuUploadDir) addMenuRoutes(app, menus, requireRole('RestaurantOwner'), menuUploadDir)
   if (listings) addListingRoutes(app, listings, requireRole('RestaurantOwner'))

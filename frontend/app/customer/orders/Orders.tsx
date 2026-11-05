@@ -8,6 +8,8 @@ import { customerRequest, customerToken, readCart, type CustomerOrder } from '..
 import { mediaUrl } from '../../../lib/menu-api'
 import { orderCurrency, orderDate, orderError, orderStatus } from '../../../lib/order-api'
 import CustomerNav from '../CustomerNav'
+import CustomerHeader from '../CustomerHeader'
+import CustomerIcon from '../CustomerIcon'
 
 export default function Orders({ detail = false }: { detail?: boolean }) {
   const router = useRouter()
@@ -16,6 +18,7 @@ export default function Orders({ detail = false }: { detail?: boolean }) {
   const [error, setError] = useState('')
   const [refresh, setRefresh] = useState(0)
   const [cartCount, setCartCount] = useState(0)
+  const [status, setStatus] = useState('All')
 
   useEffect(() => {
     const controller = new AbortController()
@@ -45,14 +48,20 @@ export default function Orders({ detail = false }: { detail?: boolean }) {
 
   const order = orders[0]
   const completed = order?.status === 'Completed'
-  return <main className="customer-app customer-orders">
+  const visibleOrders = orders.filter((item) => status === 'All' || item.status === status)
+  const statuses = ['All', 'Pending', 'Completed', 'Cancelled']
+  return <main className="customer-app">
+    <CustomerHeader />
+    <section className="customer-orders" aria-labelledby="customer-orders-title">
     <header className="orders-heading">
-      {detail && <Link href="/customer/orders/" aria-label="Kembali ke riwayat"><Image src="/orders/back.svg" alt="" width={17} height={30} /></Link>}
-      <h1>{detail ? order ? `Pesanan #${order.orderId}` : 'Status Pesanan' : 'Riwayat Pesanan'}</h1>
+      {detail && <Link href="/customer/orders/" aria-label="Kembali ke riwayat"><CustomerIcon name="back" /></Link>}
+      <h1 id="customer-orders-title">{detail ? order ? `Pesanan #${order.orderId}` : 'Status Pesanan' : 'Riwayat Pesanan'}</h1>
+      <button className="orders-refresh" type="button" disabled={loading} aria-label={loading ? 'Memperbarui status pesanan' : 'Perbarui status pesanan'} title="Perbarui status" onClick={() => setRefresh((value) => value + 1)}><CustomerIcon name="refresh" /></button>
     </header>
-    <div className="orders-refresh"><button disabled={loading} onClick={() => setRefresh((value) => value + 1)}>Perbarui Status</button></div>
+    {!detail && <p className="orders-intro">Lihat riwayat dan jadwal pengambilan makananmu.</p>}
+    {!detail && <div className="marketplace-categories orders-filters" role="group" aria-label="Filter status pesanan">{statuses.map((value) => <button key={value} type="button" aria-pressed={status === value} className={status === value ? 'selected' : ''} onClick={() => setStatus(value)}>{value === 'All' ? 'Semua' : orderStatus(value)}</button>)}</div>}
     {error && <p className="customer-alert" role="alert">{error}</p>}
-    {loading ? <p className="customer-empty" role="status">Memuat pesanan…</p> : error ? null : !orders.length ? <div className="customer-empty"><h2>Belum ada pesanan</h2><p>Makanan yang kamu selamatkan akan tampil di sini.</p><Link href="/customer/">Cari Makanan</Link></div> : detail ? <>
+    {loading ? <p className="customer-empty customer-loading" role="status">Memuat pesanan…</p> : error ? null : !orders.length ? <div className="customer-empty"><CustomerIcon name="orders" /><h2>Belum ada pesanan</h2><p>Makanan yang kamu selamatkan akan tampil di sini.</p><Link href="/customer/">Cari Makanan</Link></div> : detail ? <>
       <ol className="order-timeline" aria-label="Status pesanan">
         <li><Image src="/orders/confirmed.svg" alt="" width={31} height={31} /><div><h2>Pesanan Dikonfirmasi</h2><p>{orderDate(order.orderedAt)}</p></div></li>
         <li className={completed ? '' : 'upcoming'}><Image src={completed ? '/orders/confirmed.svg' : '/orders/pending.svg'} alt="" width={31} height={31} /><div><h2>{orderStatus(order.status)}</h2><p>{completed ? 'Pesanan sudah diambil dan pickup terverifikasi.' : order.status === 'Cancelled' ? 'Pesanan dibatalkan. Kode pickup tidak dapat digunakan.' : 'Tunjukkan kode pickup saat mengambil makanan.'}</p></div></li>
@@ -60,7 +69,8 @@ export default function Orders({ detail = false }: { detail?: boolean }) {
       <div className="order-pickup-time"><Image src="/orders/clock.svg" alt="" width={28} height={33} /><div><strong>Estimasi Waktu Pickup</strong><p>{order.estimatedPickupAt ? orderDate(order.estimatedPickupAt) : 'Hubungi restoran untuk jadwal pickup.'}</p></div></div>
       {order.pickupCode && !completed && order.status !== 'Cancelled' && <section className="order-code"><h2>Kode Pickup Kamu</h2><strong>{order.pickupCode}</strong><p>Tunjukkan kode ini di restoran</p></section>}
       <section className="order-summary"><h2>{order.restaurantName || 'Rincian Pesanan'}</h2>{order.items.map((item, index) => <p key={index}><span>{item.quantity}× {item.menuName}</span><strong>{orderCurrency(item.subtotal)}</strong></p>)}<p className="order-total"><span>Total</span><strong>{orderCurrency(order.totalAmount)}</strong></p></section>
-    </> : <div className="order-history">{orders.map((item, index) => <Link key={item.orderId} href={`/customer/order/?id=${item.orderId}`} className="order-history-card"><Image src={item.items[0]?.photoUrl ? mediaUrl(item.items[0].photoUrl) : '/orders/placeholder.svg'} alt="" width={120} height={120} loading={index === 0 ? 'eager' : 'lazy'} unoptimized /><div><h2>{item.restaurantName || `Pesanan #${item.orderId}`}</h2><p>{item.items.map((line) => `${line.quantity}× ${line.menuName}`).join(', ')}</p><strong>{orderCurrency(item.totalAmount)}</strong><span className="order-badge">{orderStatus(item.status)}</span><small>{orderDate(item.orderedAt)}</small></div></Link>)}</div>}
+    </> : !visibleOrders.length ? <div className="customer-empty"><CustomerIcon name="orders" /><h2>Belum ada pesanan {orderStatus(status).toLowerCase()}</h2><p>Coba pilih status lain untuk melihat pesananmu.</p><button className="customer-secondary" type="button" onClick={() => setStatus('All')}>Lihat semua pesanan</button></div> : <div className="order-history">{visibleOrders.map((item, index) => <Link key={item.orderId} href={`/customer/order/?id=${item.orderId}`} className="order-history-card"><Image src={item.items[0]?.photoUrl ? mediaUrl(item.items[0].photoUrl) : '/orders/placeholder.svg'} alt="" width={120} height={120} loading={index === 0 ? 'eager' : 'lazy'} unoptimized /><div><h2>{item.restaurantName || `Pesanan #${item.orderId}`}</h2><p>{item.items.map((line) => `${line.quantity}× ${line.menuName}`).join(', ')}</p><strong>{orderCurrency(item.totalAmount)}</strong><span className={`order-badge status-${item.status.toLowerCase()}`}>{orderStatus(item.status)}</span><small>{orderDate(item.orderedAt)}</small></div></Link>)}</div>}
+    </section>
     <CustomerNav cartCount={cartCount} active="orders" />
   </main>
 }

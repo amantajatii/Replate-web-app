@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { customerRequest, customerToken, readCart, saveCart, type MarketplaceListing } from '../../../lib/customer-api'
 import { mediaUrl } from '../../../lib/menu-api'
+import CustomerHeader from '../CustomerHeader'
+import CustomerIcon from '../CustomerIcon'
 
 const currency = (amount: number) => `Rp ${Math.round(amount).toLocaleString('id-ID')}`
 const time = (value: string) => new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(value))
@@ -18,6 +20,12 @@ export default function ListingDetail() {
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    if (!message) return
+    const timer = window.setTimeout(() => setMessage(''), 4000)
+    return () => window.clearTimeout(timer)
+  }, [message])
 
   useEffect(() => {
     let cancelled = false
@@ -54,7 +62,8 @@ export default function ListingDetail() {
       if (line) line.quantity = Math.min(listing!.availableQuantity, line.quantity + quantity)
       else current.push({ surplusListingId: listing!.surplusListingId, quantity })
       saveCart(current)
-      setMessage(`${listing!.menuName} ditambahkan ke keranjang.`)
+      sessionStorage.setItem('replate-cart-notice', `${listing!.menuName} ditambahkan ke keranjang.`)
+      router.push('/customer/')
     }
   }
 
@@ -63,23 +72,27 @@ export default function ListingDetail() {
     return other.restaurant.restaurantId
   }
 
-  if (busy) return <main className="customer-app"><div className="customer-empty">Memuat detail makanan…</div></main>
-  if (!listing) return <main className="customer-app"><Link className="customer-back" href="/customer/">← Kembali ke marketplace</Link><div className="customer-empty"><h1>Listing tidak tersedia</h1><p>{error || 'Listing sudah habis atau waktu pickup berakhir.'}</p></div></main>
+  if (busy) return <main className="customer-app"><CustomerHeader /><div className="customer-detail-page"><div className="customer-empty customer-loading" role="status">Memuat detail makanan…</div></div></main>
+  if (!listing) return <main className="customer-app"><CustomerHeader /><div className="customer-detail-page"><Link className="customer-back" href="/customer/"><CustomerIcon name="back" /> Kembali ke marketplace</Link><div className="customer-empty"><CustomerIcon name="leaf" /><h1>Listing tidak tersedia</h1><p>{error || 'Listing sudah habis atau waktu pickup berakhir.'}</p></div></div></main>
 
   return (
-    <main className="customer-app customer-detail-page">
-      <div className="customer-detail-toolbar"><Link href="/customer/" aria-label="Kembali ke marketplace">←</Link><span>Detail Makanan</span><button type="button" aria-label="Bagikan" onClick={() => { void navigator.clipboard?.writeText(window.location.href).then(() => setMessage('Tautan disalin.')) }}>↗</button></div>
-      <div className="customer-detail-photo"><Image src={listing.photos[0] ? mediaUrl(listing.photos[0]) : '/menu/veggie.jpg'} alt={listing.menuName} fill sizes="(max-width: 600px) 100vw, 720px" unoptimized /><button type="button" aria-label="Simpan ke favorit">♡</button></div>
+    <main className="customer-app">
+      <CustomerHeader />
+      <div className="customer-detail-page">
+      <div className="customer-detail-toolbar"><Link href="/customer/" aria-label="Kembali ke marketplace"><CustomerIcon name="back" /></Link><span>Detail Makanan</span><button type="button" aria-label="Salin tautan makanan" onClick={() => { void navigator.clipboard?.writeText(window.location.href).then(() => setMessage('Tautan disalin.')).catch(() => setError('Tautan belum dapat disalin. Salin alamat halaman dari browser.')) }}><CustomerIcon name="share" /></button></div>
+      <div className="customer-detail-layout"><div className="customer-detail-photo"><Image src={listing.photos[0] ? mediaUrl(listing.photos[0]) : '/menu/veggie.jpg'} alt={listing.menuName} fill sizes="(max-width: 600px) 100vw, 720px" unoptimized /></div>
       <article className="customer-detail-card">
-        <div className="customer-detail-heading"><div><h1>{listing.menuName}</h1><p>{listing.restaurant.name}</p></div><span className="detail-discount">{listing.discountPercent}% OFF</span></div>
+        <div className="customer-detail-heading"><div><h1>{listing.menuName}</h1><p>{listing.restaurant.name}</p></div><span className="detail-discount">Hemat {listing.discountPercent}%</span></div>
         <div className="customer-detail-price"><strong>{currency(listing.rescuePrice)}</strong><del>{currency(listing.normalPrice)}</del></div>
         <p className="customer-detail-description">{listing.description}</p>
         {(listing.dietTags.length > 0 || listing.allergens.length > 0) && <div className="customer-detail-tags">{listing.dietTags.map((tag) => <span key={tag}>{tag}</span>)}{listing.allergens.map((tag) => <span key={tag}>Mengandung {tag}</span>)}</div>}
-        <div className="customer-detail-facts"><div><span aria-hidden="true">▤</span><p><strong>Stok</strong><small>{listing.availableQuantity} porsi tersedia</small></p></div><div><span aria-hidden="true">◷</span><p><strong>Jendela Pickup</strong><small>{time(listing.pickupStart)}–{time(listing.pickupEnd)} WIB</small></p></div><div><span aria-hidden="true">⌖</span><p><strong>Lokasi</strong><small>{listing.restaurant.address}</small></p></div></div>
+        <div className="customer-detail-facts"><div><CustomerIcon name="cart" /><p><strong>Stok</strong><small>{listing.availableQuantity} porsi tersedia</small></p></div><div><CustomerIcon name="clock" /><p><strong>Jadwal pickup</strong><small>{time(listing.pickupStart)}–{time(listing.pickupEnd)} WIB</small></p></div><div><CustomerIcon name="pin" /><p><strong>Lokasi</strong><small>{listing.restaurant.address}</small></p></div></div>
         {listing.pickupDirections && <p className="pickup-directions">Instruksi pickup: {listing.pickupDirections}</p>}
         {error && <p className="customer-alert" role="alert">{error}</p>}{message && <p className="customer-success" role="status">{message}</p>}
-        <div className="customer-detail-actions"><div className="quantity-stepper"><button type="button" aria-label="Kurangi jumlah" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><span aria-live="polite">{quantity}</span><button type="button" aria-label="Tambah jumlah" disabled={quantity >= listing.availableQuantity} onClick={() => setQuantity((value) => Math.min(listing.availableQuantity, value + 1))}>+</button></div><button className="customer-primary" type="button" onClick={addToCart}>Tambah ke Keranjang · {currency(listing.rescuePrice * quantity)}</button></div>
+        <div className="customer-detail-actions"><div className="quantity-stepper"><button type="button" aria-label="Kurangi jumlah" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))}>−</button><span aria-live="polite">{quantity}</span><button type="button" aria-label="Tambah jumlah" disabled={quantity >= listing.availableQuantity} onClick={() => setQuantity((value) => Math.min(listing.availableQuantity, value + 1))}>+</button></div><button className="customer-primary" type="button" onClick={addToCart}><span>Tambah ke keranjang<br />{currency(listing.rescuePrice * quantity)}</span></button></div>
       </article>
+      </div>
+      </div>
     </main>
   )
 }

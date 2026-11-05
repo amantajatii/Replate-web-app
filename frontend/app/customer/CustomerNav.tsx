@@ -1,12 +1,12 @@
-import Image from 'next/image'
 import Link from 'next/link'
+import CustomerIcon from './CustomerIcon'
 
 export default function CustomerNav({ cartCount, active = 'home' }: { cartCount: number; active?: 'home' | 'cart' | 'orders' }) {
   return (
     <nav className="customer-bottom-nav" aria-label="Navigasi customer">
-      <Link className={active === 'home' ? 'selected' : ''} aria-current={active === 'home' ? 'page' : undefined} href="/customer/"><Image src="/orders/home.svg" alt="" width={20} height={22} />Beranda</Link>
-      <Link className={active === 'cart' ? 'selected' : ''} aria-current={active === 'cart' ? 'page' : undefined} href="/customer/cart/"><Image src="/orders/cart.svg" alt="" width={24} height={22} />Keranjang{cartCount > 0 && <b>{cartCount}</b>}</Link>
-      <Link className={active === 'orders' ? 'selected' : ''} aria-current={active === 'orders' ? 'page' : undefined} href="/customer/orders/"><Image src="/orders/orders.svg" alt="" width={24} height={22} />Pesanan</Link>
+      <Link className={active === 'home' ? 'selected' : ''} aria-current={active === 'home' ? 'page' : undefined} href="/customer/"><CustomerIcon name="home" />Beranda</Link>
+      <Link className={active === 'cart' ? 'selected' : ''} aria-current={active === 'cart' ? 'page' : undefined} href="/customer/cart/"><CustomerIcon name="cart" />Keranjang{cartCount > 0 && <b aria-label={`${cartCount} porsi di keranjang`}>{cartCount}</b>}</Link>
+      <Link className={active === 'orders' ? 'selected' : ''} aria-current={active === 'orders' ? 'page' : undefined} href="/customer/orders/"><CustomerIcon name="orders" />Pesanan</Link>
     </nav>
   )
 }
