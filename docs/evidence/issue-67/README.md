@@ -1,6 +1,6 @@
 # Bukti QA histori produksi — fixture
 
-Screenshot pada folder ini diambil dari production build lokal menggunakan Chrome terisolasi dengan API fixture. Nama restoran berlabel **fixture**. Tidak ada koneksi atau bukti persistensi Azure SQL dalam screenshot ini.
+Screenshot pada folder ini diambil dari production build lokal menggunakan Chrome terisolasi dengan API fixture. Nama restoran berlabel **fixture**. Screenshot ini tidak membuktikan persistensi database.
 
 - `history-fixture-desktop.png`: histori produksi pada viewport 1440 × 1000.
 - `history-fixture-mobile.png`: viewport 390 × 844; tabel memiliki scroll horizontal di dalam container, halaman tidak overflow.

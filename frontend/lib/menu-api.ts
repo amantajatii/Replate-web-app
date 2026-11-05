@@ -59,7 +59,7 @@ export async function ownerRequest<T>(
     const detail = (await response.json().catch(() => null)) as {
       title?: string
     } | null
-    throw new Error(detail?.title ?? `Permintaan gagal (${response.status}).`)
+    throw Object.assign(new Error(detail?.title ?? `Permintaan gagal (${response.status}).`), { status: response.status })
   }
   return response.json() as Promise<T>
 }

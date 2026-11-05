@@ -1,6 +1,6 @@
 # Replate production analytics (VPS batch)
 
-An executable portfolio slice: SQL production records → authenticated extraction → quality checks → per-menu forecasting → chronological evaluation → recommendation upsert → owner dashboard at `/owner/insights/`. Runs on ordinary Python/Node/Docker; no Azure account, SDK, hosted model or GPU required.
+An executable portfolio slice: SQL production records → authenticated extraction → quality checks → per-menu forecasting → chronological evaluation → recommendation upsert → owner dashboard at `/owner/insights/`. Runs as a Python batch alongside the Node API and SQL Server on a VPS; no hosted model or GPU is required.
 
 ## Reproduce the offline demo
 
@@ -60,6 +60,6 @@ It starts a temporary API listener, runs the real Python HTTP batch twice, check
 
 ## Operational boundaries
 
-A failed request exits nonzero. A retry safely republishes existing menu/date results; a failed batch may have published earlier menus, so inspect the exit status and rerun. Menus with insufficient valid data are skipped, never fabricated. Automatic daily results target **today in Asia/Jakarta at 02:00**, using records through yesterday. Previous docs mentioning “tomorrow” or Azure are historical proposals; this executable contract takes precedence.
+A failed request exits nonzero. A retry safely republishes existing menu/date results; a failed batch may have published earlier menus, so inspect the exit status and rerun. Menus with insufficient valid data are skipped, never fabricated. Automatic daily results target **today in Asia/Jakarta at 02:00**, using records through yesterday. The batch uses the same target-date contract as the owner dashboard.
 
 See [VPS setup](../deploy/README.md). No remote deployment is performed by these files. Scale evidence is local/small-data until a real dataset and measured load test exist; describe this as analytics/ML engineering in your portfolio rather than claiming big-data production scale.

@@ -23,15 +23,17 @@ export default function Insights() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [refresh, setRefresh] = useState(0)
+  const [restaurantRefresh, setRestaurantRefresh] = useState(0)
+  const [restaurantError, setRestaurantError] = useState('')
   useEffect(() => {
     const token = ownerToken()
     if (!token) { router.replace('/login/'); return }
     let current = true
     ownerRequest<Restaurant[]>('/api/owner/restaurants', token).then(rows => {
-      if (current) { setRestaurants(rows); setRestaurantId(String(rows[0]?.restaurantId ?? '')); if (!rows.length) setLoading(false) }
-    }).catch(error => { if (current) { setError(error.message); setLoading(false) } })
+      if (current) { setRestaurants(rows); setRestaurantError(''); setRestaurantId(String(rows[0]?.restaurantId ?? '')); if (!rows.length) setLoading(false) }
+    }).catch(error => { if (current) { setRestaurantError(error.message); setLoading(false) } })
     return () => { current = false }
-  }, [router])
+  }, [router, restaurantRefresh])
   useEffect(() => {
     const token = ownerToken()
     if (!token || !restaurantId || !date) return
@@ -42,7 +44,7 @@ export default function Insights() {
       .finally(() => { if (current) setLoading(false) })
     return () => { current = false }
   }, [restaurantId, date, refresh])
-  const cutoff = Date.parse(`${date}T00:00:00Z`) - 28 * 86400000
+  const cutoff = Date.parse(`${date}T00:00:00Z`) - 3 * 86400000
   const records = data?.menus.flatMap(menu => menu.records).filter(record => Date.parse(record.productionDate) >= cutoff) ?? []
   const produced = records.reduce((sum, r) => sum + r.producedQuantity, 0)
   const sold = records.reduce((sum, r) => sum + r.soldQuantity, 0)
@@ -60,22 +62,21 @@ export default function Insights() {
         <button type="button" className="insights-refresh" aria-label="Muat ulang rekomendasi" disabled={loading || !restaurantId || !date} onClick={() => { change(); setRefresh(value => value + 1) }}><CustomerIcon name="refresh" /></button>
       </div>
       {error && <p role="alert" className="insights-notice">{error}</p>}
-      {loading ? <p role="status">Memuat catatan produksi…</p> : !restaurants.length ? <OwnerEmptyState title="Mulai dari profil restoran" action={<Link href="/owner/settings/">Buat profil restoran →</Link>}>Setelah menu dan produksi tercatat, analitik akan tersedia di sini.</OwnerEmptyState> : data && <>
-        {data.synthetic && <p className="insights-notice" role="status">Data demo sintetis · Angka dan evaluasi ini untuk demonstrasi, bukan hasil operasional restoran.</p>}
-        <section className="insights-stats" aria-label="Ringkasan 28 hari sebelum tanggal rekomendasi">
-          <div><span>Diproduksi · 28 hari</span><strong>{number(produced)} <small>porsi</small></strong></div>
+      {loading ? <p role="status">Memuat catatan produksi…</p> : restaurantError ? <OwnerEmptyState title="Daftar restoran belum dapat dimuat" action={<button type="button" className="menu-secondary" onClick={() => { setLoading(true); setRestaurantRefresh(value => value + 1) }}>Coba lagi</button>}><span role="alert">{restaurantError} Profil yang sudah tersimpan tidak berubah.</span></OwnerEmptyState> : !restaurants.length ? <OwnerEmptyState title="Mulai dari profil restoran" action={<Link href="/owner/settings/">Buat profil restoran →</Link>}>Setelah menu dan produksi tercatat, analitik akan tersedia di sini.</OwnerEmptyState> : data && <>
+        <section className="insights-stats" aria-label="Ringkasan 3 hari sebelum tanggal rekomendasi">
+          <div><span>Diproduksi · 3 hari</span><strong>{number(produced)} <small>porsi</small></strong></div>
           <div><span>Terjual reguler</span><strong>{number(sold)} <small>porsi</small></strong></div>
           <div><span>Surplus dari produksi</span><strong>{number(surplus)} <small>porsi · {produced ? number(surplus / produced * 100) : '0'}%</small></strong></div>
         </section>
         {daily.length > 0 && <section className="insights-panel"><h2>Ke mana hasil masakmu?</h2><p>Penjualan reguler dan surplus per hari. Hari tanpa catatan tidak dihitung sebagai nol.</p>
           <div className="insights-chart" role="img" aria-label={`Tren ${daily.length} hari tercatat; ${sold} porsi terjual reguler dan ${surplus} surplus. Rincian tersedia di tabel berikut.`}>{daily.map(day => <div key={day.day} title={`${day.day}: ${day.sold} terjual, ${day.surplus} surplus`}><i style={{ height: `${day.surplus / max * 100}%` }} /><b style={{ height: `${day.sold / max * 100}%` }} /></div>)}</div>
-          <div className="insights-legend"><span>● Terjual reguler</span><span>● Surplus</span><small>{daily[0]?.day} — {daily.at(-1)?.day}</small></div>
+          <div className="insights-legend"><span>● Terjual reguler</span><span>● Surplus</span><small>{daily[0]?.day} sampai {daily.at(-1)?.day}</small></div>
           <details><summary>Lihat rincian harian</summary><table><thead><tr><th scope="col">Tanggal</th><th scope="col">Terjual</th><th scope="col">Surplus</th></tr></thead><tbody>{daily.map(day => <tr key={day.day}><th scope="row">{day.day}</th><td>{day.sold}</td><td>{day.surplus}</td></tr>)}</tbody></table></details>
         </section>}
-        <section className="insights-recommendations"><div><h2>Pertimbangan produksi berikutnya</h2><p>Target {date || '—'} · Menggunakan catatan sebelum tanggal ini, maksimal 180 hari.</p></div>
+        <section className="insights-recommendations"><div><h2>Pertimbangan produksi berikutnya</h2><p>Target {date} · Menggunakan catatan sebelum tanggal ini, maksimal 180 hari.</p></div>
           {!data.menus.length ? <OwnerEmptyState title="Belum ada menu aktif" action={<Link href="/owner/menu/">Kelola menu →</Link>}>Tambahkan menu dan catat produksi harian untuk memulai.</OwnerEmptyState> : data.menus.map(menu => <article className="insights-panel" key={menu.menuId}>
             <div className="insights-menu-title"><h3>{menu.name}</h3><span>{menu.records.length} catatan tersedia</span></div>
-            {menu.recommendation ? <><p className="insights-quantity">{number(menu.recommendation.recommendedQuantity)} <span>porsi disarankan</span></p><p>{menu.recommendation.insight}</p><small className="insights-meta">{menu.recommendation.modelVersion} · Diperbarui {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(menu.recommendation.generatedAt))} WIB</small></> : <><p>{menu.records.length < 35 ? `Butuh minimal 35 catatan harian valid. Saat ini tersedia ${menu.records.length}.` : 'Belum ada hasil batch untuk tanggal ini. Catatan akan diperiksa saat proses rekomendasi dijalankan.'}</p><Link href="/owner/menu/">Catat produksi →</Link></>}
+            {menu.recommendation ? <><p className="insights-quantity">{number(menu.recommendation.recommendedQuantity)} <span>porsi disarankan</span></p><p>Perkiraan berdasarkan riwayat penjualan reguler menu ini.</p><details><summary>Lihat dasar rekomendasi</summary><p>{menu.recommendation.insight.replace(/^Data demo sintetis\. /, '')}</p><small className="insights-meta">Metode: {menu.recommendation.modelVersion}</small></details><small className="insights-meta">Diperbarui {new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(menu.recommendation.generatedAt))} WIB</small></> : <><p>{menu.records.length < 35 ? `Butuh minimal 35 catatan harian valid. Saat ini tersedia ${menu.records.length}.` : 'Rekomendasi untuk tanggal ini belum tersedia. Coba periksa kembali nanti.'}</p><Link href="/owner/menu/">Catat produksi →</Link></>}
           </article>)}
         </section>
         <p className="insights-footnote">Saran memperkirakan penjualan reguler teramati, yang dapat dibatasi stok. Pesanan surplus tidak dihitung sebagai permintaan reguler. Keputusan jumlah masak tetap di tanganmu.</p>

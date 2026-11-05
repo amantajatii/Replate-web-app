@@ -87,7 +87,7 @@ export default function ListingsDashboard() {
         <section className="listing-stats" aria-label="Ringkasan listing">
           <article><small>Listing Aktif</small><strong>{active.length}</strong><span>Tayang di marketplace</span></article>
           <article><small>Porsi Tersedia</small><strong>{active.reduce((sum, item) => sum + item.availableQuantity, 0)}</strong><span>Siap diselamatkan</span></article>
-          <article><small>Harga Surplus</small><strong>{active.length ? currency(active.reduce((sum, item) => sum + item.rescuePrice, 0) / active.length) : '—'}</strong><span>Rata-rata per listing</span></article>
+          <article><small>Harga Surplus</small><strong>{active.length ? currency(active.reduce((sum, item) => sum + item.rescuePrice, 0) / active.length) : 'Belum ada'}</strong><span>Rata-rata per listing</span></article>
         </section>
         <section className="listing-table-panel">
           <div className="listing-panel-heading">

@@ -1,11 +1,11 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { customerRequest, customerToken, readCart, saveCart, type CartLine, type CustomerOrder, type MarketplaceListing } from '../../../lib/customer-api'
-import { mediaUrl } from '../../../lib/menu-api'
+import { reconcileCart } from '../../../lib/cart-reconciliation'
+import FoodPhoto from '../FoodPhoto'
 import CustomerNav from '../CustomerNav'
 import CustomerHeader from '../CustomerHeader'
 import CustomerIcon from '../CustomerIcon'
@@ -22,6 +22,8 @@ export default function CustomerCart() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [order, setOrder] = useState<CustomerOrder | null>(null)
+  const [refresh, setRefresh] = useState(0)
+  const [loadFailed, setLoadFailed] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -29,19 +31,21 @@ export default function CustomerCart() {
       const value = customerToken()
       if (!value) { router.replace('/login/'); return }
       setToken(value)
-      const results = await Promise.allSettled(readCart().map(async (line) => ({ ...line, listing: await customerRequest<MarketplaceListing>(`/api/marketplace/listings/${line.surplusListingId}`, value) })))
-      if (cancelled) return
-      const rows = results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : [])
-      const restaurantId = rows[0]?.listing.restaurant.restaurantId
-      const valid = rows.filter((row) => row.listing.restaurant.restaurantId === restaurantId)
-      setItems(valid.map((row) => ({ ...row, quantity: Math.min(row.quantity, row.listing.availableQuantity) })).filter((row) => row.quantity > 0))
-      saveCart(valid.map((row) => ({ surplusListingId: row.surplusListingId, quantity: Math.min(row.quantity, row.listing.availableQuantity) })).filter((row) => row.quantity > 0))
-      if (results.some((result) => result.status === 'rejected')) setError('Beberapa listing sudah tidak tersedia dan dihapus dari keranjang.')
-      if (valid.length !== rows.length) setError('Keranjang hanya dapat berisi makanan dari satu restoran. Item restoran lain telah dihapus.')
-      setLoading(false)
+      try {
+        const { items: next, removedCount } = await reconcileCart(readCart(), id => customerRequest<MarketplaceListing>(`/api/marketplace/listings/${id}`, value))
+        if (cancelled) return
+        setItems(next)
+        saveCart(next.map(({ surplusListingId, quantity }) => ({ surplusListingId, quantity })))
+        setError(removedCount ? 'Listing yang sudah tidak tersedia telah dihapus dari keranjang.' : '')
+        setLoadFailed(false)
+      } catch {
+        if (cancelled) return
+        setLoadFailed(true)
+        setError('Keranjang belum dapat diperiksa. Pilihanmu tetap tersimpan. Coba muat ulang.')
+      } finally { if (!cancelled) setLoading(false) }
     })()
     return () => { cancelled = true }
-  }, [router])
+  }, [router, refresh])
 
   const total = useMemo(() => items.reduce((sum, item) => sum + item.listing.rescuePrice * item.quantity, 0), [items])
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0)
@@ -70,14 +74,14 @@ export default function CustomerCart() {
     <main className="customer-app customer-cart-page">
       <CustomerHeader />
       <header className="customer-cart-topbar"><Link href="/customer/" aria-label="Kembali ke marketplace"><CustomerIcon name="back" /></Link><h1>{order ? 'Pesanan Berhasil' : 'Keranjang'}</h1><span /></header>
-      {loading ? <div className="customer-empty customer-loading" role="status">Memuat keranjang…</div> : order ? (
-        <section className="checkout-success" aria-labelledby="order-success-heading"><span className="success-check"><CustomerIcon name="check" /></span><small>Pesanan #{order.orderId}</small><h2 id="order-success-heading">Makananmu sudah dipesan!</h2><p>Tunjukkan kode ini ke restoran saat mengambil pesanan.</p><div className="pickup-code-card"><small>KODE PICKUP</small><strong>{order.pickupCode ?? '—'}</strong><span>Pickup sekitar {order.estimatedPickupAt ? time(order.estimatedPickupAt) : 'sesuai jadwal'}</span></div><div className="checkout-order-summary">{order.items.map((item, index) => <div key={`${item.menuName}-${index}`}><span>{item.quantity}× {item.menuName}</span><strong>{currency(item.subtotal)}</strong></div>)}<div className="checkout-total"><span>Total</span><strong>{currency(order.totalAmount)}</strong></div></div><Link className="customer-primary customer-browse-link" href={`/customer/order/?id=${order.orderId}`}>Lihat Status Pesanan</Link><Link className="customer-back" href="/customer/">Jelajahi makanan lain</Link></section>
+      {loading ? <div className="customer-empty customer-loading" role="status">Memuat keranjang…</div> : loadFailed ? <div className="customer-empty"><h2>Keranjang belum dapat dimuat</h2><p role="alert">{error}</p><button className="customer-secondary" type="button" onClick={() => { setLoading(true); setRefresh(value => value + 1) }}>Coba lagi</button><Link className="customer-back" href="/customer/">Kembali ke marketplace</Link></div> : order ? (
+        <section className="checkout-success" aria-labelledby="order-success-heading"><span className="success-check"><CustomerIcon name="check" /></span><small>Pesanan #{order.orderId}</small><h2 id="order-success-heading">Makananmu sudah dipesan!</h2><p>Tunjukkan kode ini ke restoran saat mengambil pesanan.</p><div className="pickup-code-card"><small>KODE PICKUP</small><strong>{order.pickupCode ?? 'Belum tersedia'}</strong><span>Pickup sekitar {order.estimatedPickupAt ? time(order.estimatedPickupAt) : 'sesuai jadwal'}</span></div><div className="checkout-order-summary">{order.items.map((item, index) => <div key={`${item.menuName}-${index}`}><span>{item.quantity}× {item.menuName}</span><strong>{currency(item.subtotal)}</strong></div>)}<div className="checkout-total"><span>Total</span><strong>{currency(order.totalAmount)}</strong></div></div><Link className="customer-primary customer-browse-link" href={`/customer/order/?id=${order.orderId}`}>Lihat Status Pesanan</Link><Link className="customer-back" href="/customer/">Jelajahi makanan lain</Link></section>
       ) : (
         <>
           <section className="customer-cart-content"><h2>Pesananmu</h2><p className="customer-cart-intro">Pastikan jadwal pickup sesuai sebelum memesan.</p>
             {error && <p className="customer-alert" role="alert">{error}</p>}
             {items.length === 0 ? <div className="customer-empty"><CustomerIcon name="cart" /><h2>Keranjang masih kosong</h2><p>Pilih makanan surplus di sekitar dan bantu kurangi food waste.</p><Link href="/customer/">Cari makanan</Link></div> : (
-              <><div className="customer-cart-list">{items.map((item) => <article className="customer-cart-item" key={item.surplusListingId}><div className="customer-cart-photo"><Image src={item.listing.photos[0] ? mediaUrl(item.listing.photos[0]) : '/menu/veggie.jpg'} alt={item.listing.menuName} fill sizes="120px" unoptimized /></div><div className="customer-cart-item-content"><strong>{item.listing.restaurant.name}</strong><h3>{item.listing.menuName}</h3><small>{time(item.listing.pickupStart)}–{time(item.listing.pickupEnd)} WIB</small><div className="customer-cart-item-footer"><b>{currency(item.listing.rescuePrice)}</b><div className="quantity-stepper compact"><button type="button" aria-label={`Kurangi ${item.listing.menuName}`} onClick={() => update(item.surplusListingId, item.quantity - 1)}>−</button><span aria-live="polite">{item.quantity}</span><button type="button" aria-label={`Tambah ${item.listing.menuName}`} disabled={item.quantity >= item.listing.availableQuantity} onClick={() => update(item.surplusListingId, item.quantity + 1)}>+</button></div></div></div></article>)}</div>
+              <><div className="customer-cart-list">{items.map((item) => <article className="customer-cart-item" key={item.surplusListingId}><div className="customer-cart-photo"><FoodPhoto photoUrl={item.listing.photos[0]} name={item.listing.menuName} sizes="120px" /></div><div className="customer-cart-item-content"><strong>{item.listing.restaurant.name}</strong><h3>{item.listing.menuName}</h3><small>{time(item.listing.pickupStart)}–{time(item.listing.pickupEnd)} WIB</small><div className="customer-cart-item-footer"><b>{currency(item.listing.rescuePrice)}</b><div className="quantity-stepper compact"><button type="button" aria-label={`Kurangi ${item.listing.menuName}`} onClick={() => update(item.surplusListingId, item.quantity - 1)}>−</button><span aria-live="polite">{item.quantity}</span><button type="button" aria-label={`Tambah ${item.listing.menuName}`} disabled={item.quantity >= item.listing.availableQuantity} onClick={() => update(item.surplusListingId, item.quantity + 1)}>+</button></div></div></div></article>)}</div>
                 <section className="customer-cart-total"><div><span>Total ({cartCount} porsi)</span><strong>{currency(total)}</strong></div><small>Pickup dari {items[0]?.listing.restaurant.name}</small><button className="customer-primary" type="button" disabled={busy || !items.length} onClick={() => void checkout()}>{busy ? 'Memproses pesanan…' : 'Konfirmasi Pesanan'}</button><p>Dengan melanjutkan, stok akan dipesan dan kode pickup akan dibuat.</p></section>
               </>
             )}

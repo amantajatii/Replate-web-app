@@ -1,54 +1,41 @@
-> Historical design proposal. Current implementation runs on an ordinary VPS with a private Python batch. See [AI implementation](../../AI/README.md) for the actual data, date, evaluation and API contract.
+# Arsitektur deployment Replate
 
-![Cloud Deployment Architecture Diagram](Cloud%20Deployment%20Architecture%20Diagram.png)
-# Catatan Pendamping Replate Cloud Deployment Architecture Diagram
+Frontend statis, API, database, dan batch rekomendasi berjalan pada satu VPS melalui Docker Compose. Caddy menjadi pintu masuk HTTPS; API dan SQL Server hanya diakses melalui jaringan internal container.
 
-## Keterangan Alur
+```mermaid
+flowchart TD
+    Browser[Browser customer / owner] -->|HTTPS| Caddy[Caddy]
+    Caddy -->|Static files| Frontend[Next.js static export]
+    Caddy -->|API dan foto| API[Express API · Node 24]
+    API -->|Prisma| SQL[(SQL Server)]
+    API --> Uploads[(Volume foto)]
+    Timer[systemd timer · 02.00 WIB] --> Batch[Python · pandas / scikit-learn]
+    Batch -->|Training data · X-AI-Key| API
+    Batch -->|Rekomendasi · X-AI-Key| API
+    Batch --> Reports[(Volume laporan evaluasi)]
+```
 
-| No | Alur |
-|---|---|
-| 1 | Pengguna memuat frontend dari Static Web Apps (HTTPS). |
-| 2 | Browser memanggil Backend API di App Service (HTTPS + JWT). |
-| 3 | App Service membaca dan menulis Azure SQL melalui Prisma (TLS 1.2). Firewall hanya mengizinkan IP outbound App Service. |
-| 4a | App Service mengunggah gambar menu ke Storage dengan Managed Identity, lalu membuat SAS URL read-only berumur pendek. |
-| 4b | Browser mengambil gambar langsung dari Storage memakai SAS URL tersebut. |
-| 5 | Timer Trigger menjalankan Azure Functions sesuai jadwal. |
-| 6 | Functions memanggil endpoint bulk-read internal di App Service (HTTPS + token internal). |
-| 7 | Functions mengirim hasil rekomendasi ke endpoint internal, lalu App Service menulis ke `PRODUCTION_RECOMMENDATION`. |
-| 8 | App Service dan Functions mengambil secret dari Key Vault dengan Managed Identity (Microsoft Entra ID). |
-| 9 | Push ke `main` memicu GitHub Actions (lint, test, build), lalu deploy ke Static Web Apps, App Service, dan Functions. |
+## Alur aplikasi
 
-## Kontrol Keamanan
+1. Browser memuat hasil static export Next.js dari Caddy.
+2. Permintaan `/api/*` serta foto `/uploads/*` dan `/menu-uploads/*` diteruskan ke Express.
+3. API memvalidasi JWT dan kepemilikan data sebelum membaca atau menulis SQL Server melalui Prisma.
+4. Foto disimpan di volume persisten; database menyimpan URL dan urutannya.
+5. Timer menjalankan container batch harian. Python mengambil data melalui API internal, memeriksa kualitas data, mengevaluasi model, dan mengirim rekomendasi untuk disimpan.
+6. Owner membaca hasil tersimpan melalui endpoint dengan pemeriksaan kepemilikan restoran. Catatan per menu/tanggal diperbarui saat batch diulang.
 
-| Komponen | Firewall / akses | Autentikasi | Enkripsi |
-|---|---|---|---|
-| Static Web Apps | Publik | - | HTTPS otomatis |
-| App Service | Publik; CORS hanya `FRONTEND_URL`; FTP dimatikan | JWT (pengguna), token internal (AI) | HTTPS Only, TLS min 1.2 |
-| Azure SQL | Firewall rule: hanya IP outbound App Service; opsi Allow Azure services dimatikan | Login SQL kuat, disimpan di Key Vault | TLS min 1.2, `encrypt=true` |
-| Storage | Akses anonim dimatikan | Managed Identity (backend), SAS read-only (browser) | Secure transfer (HTTPS), TLS min 1.2 |
-| Key Vault | Hanya identitas dengan peran RBAC | Managed Identity + Azure RBAC | HTTPS |
-| Functions | Tidak ada endpoint HTTP publik (timer) | Managed Identity | HTTPS |
-| GitHub Actions | - | Kredensial deploy di GitHub Secrets | HTTPS |
+## Akses dan penyimpanan
 
-## Daftar Resource, Nama, dan Tier
+| Komponen | Akses | Data persisten |
+| --- | --- | --- |
+| Caddy | Port publik 80/443; sertifikat HTTPS | Volume sertifikat dan konfigurasi |
+| Frontend | Berkas statis melalui Caddy | Hasil build pada image |
+| API | Jaringan container; diproksi Caddy | Volume foto |
+| SQL Server | Jaringan container; login aplikasi terpisah | Volume database |
+| Batch AI | Jaringan container; kunci layanan privat | Volume laporan evaluasi |
 
-| Lapisan | Layanan | Nama resource (usulan) | Tier |
-|---|---|---|---|
-| - | Resource Group | `rg-replate` | - |
-| Presentasi | Azure Static Web Apps | `swa-replate` | Free |
-| Aplikasi | App Service Plan + Web App | `asp-replate` / `app-replate-api` | Basic B1 (Linux) |
-| AI | Function App | `func-replate-ai` | Flex Consumption |
-| Data | SQL Server + Database | `sql-replate` / `sqldb-replate` | Free offer (serverless) |
-| Data | Storage Account | `streplate<akhiran>` | Standard, LRS, Hot |
-| Keamanan | Key Vault | `kv-replate` | Standard |
-| Aplikasi dan AI | Managed Identity (fitur bawaan) | system-assigned pada `app-replate-api` dan `func-replate-ai` | Gratis |
-| Pemantauan | Application Insights | `appi-replate` | Opsional |
+Caddy menolak `/api/internal/*` dari akses publik. Batch tetap wajib menyertakan kunci layanan. Kunci JWT, kredensial SQL, dan kunci batch disediakan melalui environment privat pada server.
 
-## Catatan Tambahan
+GitHub Actions menjalankan lint, tes, dan build; deployment server serta penjadwalan systemd mengikuti [panduan VPS](../../deploy/README.md). Konfigurasi Compose sudah divalidasi dan alur batch sudah diuji terhadap SQL lokal. Build image container, HTTPS publik, backup/restore, dan eksekusi timer pada VPS masih perlu diverifikasi.
 
-- Private endpoint tidak dipakai untuk menghemat kredit Azure for Students. Keamanan dijaga lewat firewall rule, autentikasi, dan enkripsi koneksi.
-- Functions tidak mengakses database secara langsung, sehingga firewall SQL cukup mengizinkan App Service.
-- Functions juga memakai Storage Account sebagai host storage dengan Managed Identity.
-- Migrasi Prisma dijalankan dari App Service (startup) agar firewall SQL tidak perlu dibuka untuk GitHub Actions.
-- IP outbound App Service di firewall SQL perlu diperbarui jika tier App Service diubah.
-- Semua resource berada di satu region yang diizinkan akun Azure for Students.
+Detail fitur, evaluasi, dan batas data tersedia dalam [panduan AI](../../AI/README.md).

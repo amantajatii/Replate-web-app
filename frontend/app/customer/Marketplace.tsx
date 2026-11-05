@@ -1,18 +1,16 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { customerRequest, customerToken, readCart, type MarketplaceListing } from '../../lib/customer-api'
-import { mediaUrl } from '../../lib/menu-api'
+import FoodPhoto from './FoodPhoto'
 import CustomerNav from './CustomerNav'
 import CustomerHeader from './CustomerHeader'
 import CustomerIcon from './CustomerIcon'
 
 const currency = (amount: number) => `Rp ${Math.round(amount).toLocaleString('id-ID')}`
 const time = (value: string) => new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }).format(new Date(value))
-const imageFor = (listing: MarketplaceListing) => listing.photos[0] ? mediaUrl(listing.photos[0]) : '/menu/veggie.jpg'
 const group = (category: string) => /bakery|pastry|roti|kue/i.test(category) ? 'Bakery' : /lainnya|other/i.test(category) ? 'Others' : 'Meals'
 
 export default function Marketplace() {
@@ -75,7 +73,7 @@ export default function Marketplace() {
         <div className="marketplace-list-heading"><div><h2>{search || category !== 'All' ? 'Hasil pencarian' : 'Pilihan makanan'}</h2><p aria-live="polite">{loading ? 'Memuat pilihan makanan…' : error ? 'Pilihan makanan belum dapat dimuat' : `${visible.length} makanan tersedia untuk diselamatkan`}</p></div><span><CustomerIcon name="clock" /> Ambil sesuai jadwal</span></div>
         {error ? <div className="customer-empty"><CustomerIcon name="search" /><h2>Makanan belum dapat dimuat</h2><p className="customer-alert" role="alert">{error}</p><button className="customer-secondary" type="button" onClick={() => setRefresh((value) => value + 1)}>Coba lagi</button></div> : loading ? <div className="customer-empty customer-loading" role="status">Mencari makanan surplus…</div> : visible.length === 0 ? <div className="customer-empty"><CustomerIcon name="leaf" /><h2>{search || category !== 'All' ? 'Belum ada yang cocok' : 'Belum ada makanan tersedia'}</h2><p>{search || category !== 'All' ? 'Coba kata kunci lain atau lihat semua kategori.' : 'Pilihan makanan dari restoran akan muncul di sini. Cek lagi nanti, ya.'}</p>{(search || category !== 'All') && <button className="customer-secondary" type="button" onClick={() => { setSearch(''); setCategory('All') }}>Lihat semua makanan</button>}</div> : (
           <div className="marketplace-grid">{visible.map((item) => <Link className="marketplace-card" href={`/customer/listing/?id=${item.surplusListingId}`} key={item.surplusListingId}>
-            <div className="marketplace-card-photo"><Image src={imageFor(item)} alt={item.menuName} fill sizes="(max-width: 599px) 110px, (max-width: 959px) 50vw, 350px" unoptimized /><span className="marketplace-discount">Hemat {item.discountPercent}%</span><span className="marketplace-stock">{item.availableQuantity} tersisa</span></div>
+            <div className="marketplace-card-photo"><FoodPhoto photoUrl={item.photos[0]} name={item.menuName} sizes="(max-width: 599px) 110px, (max-width: 959px) 50vw, 350px" /><span className="marketplace-discount">Hemat {item.discountPercent}%</span><span className="marketplace-stock">{item.availableQuantity} tersisa</span></div>
             <div className="marketplace-card-content"><strong className="marketplace-restaurant">{item.restaurant.name}</strong><h3>{item.menuName}</h3><p className="marketplace-description">{item.description}</p><div className="marketplace-card-price"><span><strong>{currency(item.rescuePrice)}</strong><del>{currency(item.normalPrice)}</del></span><small><CustomerIcon name="clock" />{time(item.pickupStart)}–{time(item.pickupEnd)} WIB</small></div></div>
           </Link>)}</div>
         )}

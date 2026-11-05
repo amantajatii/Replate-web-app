@@ -63,6 +63,7 @@
 .marketplace-card:hover { border-color: var(--customer-green); }
 .marketplace-card-photo { position: relative; aspect-ratio: 1.6; overflow: hidden; background: var(--customer-soft); }
 .marketplace-card-photo > img { object-fit: cover; }
+.food-photo-placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; background: #eaf0e6; color: #405d48; font-size: 12px; line-height: 1.5; text-align: center; }
 .marketplace-discount, .marketplace-stock { position: absolute; padding: 5px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; }
 .marketplace-discount { top: 12px; left: 12px; background: #f3f5d8; color: #334722; }
 .marketplace-stock { right: 12px; bottom: 12px; background: #203b2e; color: #fff; }

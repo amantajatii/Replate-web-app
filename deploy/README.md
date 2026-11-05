@@ -1,6 +1,6 @@
 # Ordinary VPS deployment
 
-These files replace the proposed Azure compute/storage architecture. The executable app uses Express + SQL Server, static Next.js export served by Caddy, persistent image volumes, and a private scheduled Python container. No cloud migration or remote deployment has been executed.
+The application uses Express + SQL Server, static Next.js export served by Caddy, persistent image volumes, and a private scheduled Python container. Remote deployment has not been executed.
 
 Use an x86-64 Linux VPS compatible with SQL Server 2022 requirements, Docker Compose and systemd. Budget memory for SQL Server and the application in addition to the batch's 768 MB limit; this is not a configuration for a tiny 1 GB VPS. SQL Express is the default; choose the licensed SQL edition appropriate to actual use. Do not deploy Developer Edition for a production workload. See [Microsoft's container configuration documentation](https://learn.microsoft.com/en-us/sql/linux/sql-server-linux-configure-docker?view=sql-server-ver17).
 

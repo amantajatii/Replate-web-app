@@ -32,6 +32,7 @@ a { color: inherit; }
 .auth-roles button { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 76px; padding: 12px; background: #fff; border: 1px solid var(--auth-border); border-radius: 10px; color: var(--auth-muted); text-align: left; transition: background .18s ease, border-color .18s ease; }
 .auth-roles button:hover { border-color: var(--auth-green); }
 .auth-roles button.selected { background: var(--auth-soft); border-color: var(--auth-green); color: var(--auth-green); }
+.auth-roles button.selected small { color: #405d48; }
 .auth-roles strong, .auth-roles small { display: block; }
 .auth-roles strong { color: var(--auth-ink); font-size: 13px; font-weight: 600; }
 .auth-roles small { margin-top: 3px; color: var(--auth-muted); font-size: 11px; line-height: 1.5; }
@@ -76,6 +77,7 @@ a { color: inherit; }
 .auth-story-copy h2 { margin: 0 0 18px; font-size: 38px; line-height: 1.22; letter-spacing: -1px; text-wrap: balance; }
 .auth-story-copy p { max-width: 34ch; margin: 0; color: #d2e2d6; font-size: 14px; line-height: 1.8; }
 .auth-story-photo { position: relative; flex: none; aspect-ratio: 1.6; overflow: hidden; margin-top: auto; border-radius: 12px; background: #395544; }
+.auth-story-photo picture, .auth-story-photo picture img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .auth-story-photo img { object-fit: cover; }
 .auth-story-note { display: flex; align-items: start; gap: 10px; margin: -8px 0 0; color: #d2e2d6; font-size: 12px; line-height: 1.7; }
 .auth-story :focus-visible { outline-color: #d3e3c5; }

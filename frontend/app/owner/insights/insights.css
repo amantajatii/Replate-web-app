@@ -17,7 +17,7 @@
 .insights-stats small { font-size: 13px; font-weight: 400; }
 .insights-panel { background: #fff; border: 1px solid #dfe5dc; border-radius: 16px; padding: 28px; min-width: 0; }
 .insights-chart { height: 170px; display: flex; align-items: end; gap: clamp(2px, 1vw, 10px); margin-top: 24px; border-bottom: 1px solid #d8e0d5; }
-.insights-chart > div { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: end; }
+.insights-chart > div { flex: 1; max-width: 80px; height: 100%; display: flex; flex-direction: column; justify-content: end; }
 .insights-chart b { background: #255e46; display: block; }
 .insights-chart i { background: #cfb46b; display: block; border-radius: 3px 3px 0 0; }
 .insights-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; margin: 16px 0 24px; color: #255e46; }

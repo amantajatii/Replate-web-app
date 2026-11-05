@@ -1,11 +1,12 @@
 'use client'
 
 import { nextChoiceIndex } from '../../lib/choice-navigation'
+import { useId } from 'react'
 
 type Option<T extends string> = { value: T; label: string }
 
 export default function OwnerChoiceGroup<T extends string>({
-  label, options, value, onChange, className = '', tabs = false,
+  label, options, value, onChange, className = '', tabs = false, idPrefix,
 }: {
   label: string
   options: readonly Option<T>[]
@@ -13,7 +14,10 @@ export default function OwnerChoiceGroup<T extends string>({
   onChange: (value: T) => void
   className?: string
   tabs?: boolean
+  idPrefix?: string
 }) {
+  const generatedId = useId()
+  const prefix = idPrefix ?? generatedId
   return <div
     className={`owner-choice-group ${className}`}
     role={tabs ? 'tablist' : 'group'}
@@ -31,6 +35,8 @@ export default function OwnerChoiceGroup<T extends string>({
       key={option.value}
       type="button"
       role={tabs ? 'tab' : undefined}
+      id={tabs ? `${prefix}-tab-${option.value}` : undefined}
+      aria-controls={tabs ? `${prefix}-panel-${option.value}` : undefined}
       aria-selected={tabs ? value === option.value : undefined}
       aria-pressed={tabs ? undefined : value === option.value}
       tabIndex={tabs && value !== option.value ? -1 : 0}

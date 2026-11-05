@@ -151,8 +151,18 @@
 }
 .rs-cover-button input,
 .rs-photo-actions input {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
+.rs-cover-button:has(input:focus-visible), .rs-photo-actions label:has(input:focus-visible) { outline: 3px solid var(--green); outline-offset: 4px; }
+.rs-cover-button, .rs-photo-actions label { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.rs-pickup-location { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--line); border-radius: 12px; background: #faf9f5; }
+.rs-pickup-location a { line-height: 1.7; overflow-wrap: anywhere; color: var(--green); }
+.rs-pickup-location button { min-height: 44px; border: 1px solid var(--green); border-radius: 8px; background: #fff; color: var(--green); }
 .rs-logo {
   position: absolute;
   left: 12px;

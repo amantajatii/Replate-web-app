@@ -211,7 +211,7 @@ export default function ListingForm() {
                 <div className="listing-section-heading"><div><span>1</span><h2>Pilihan Menu Terdaftar</h2></div><small>Pilih dari katalog dapur aktif</small></div>
                 <label className="listing-select-wrap"><span className="sr-only">Menu dan catatan produksi</span><select value={productionId ?? ''} onChange={(event) => selectProduction(event.target.value)} required disabled={!!editId}>
                   <option value="">Pilih menu dengan catatan produksi</option>
-                  {availableMenus.map((item) => productions.filter((record) => record.menuId === item.menuId && (record.surplusQuantity > 0 || record.productionRecordId === productionId)).map((record) => <option key={record.productionRecordId} value={record.productionRecordId}>{item.name} — {item.category} · {record.surplusQuantity} porsi tersedia</option>))}
+                  {availableMenus.map((item) => productions.filter((record) => record.menuId === item.menuId && (record.surplusQuantity > 0 || record.productionRecordId === productionId)).map((record) => <option key={record.productionRecordId} value={record.productionRecordId}>{item.name}, {item.category} · {record.surplusQuantity} porsi tersedia</option>))}
                 </select><Image src="/listing/chevron.svg" alt="" width={12} height={8} /></label>
                 {menu ? <div className="listing-menu-summary">
                   <div className="listing-menu-image"><Image src={image} alt={menu.name} fill sizes="80px" unoptimized /></div>

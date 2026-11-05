@@ -1,6 +1,6 @@
 # Bukti integrasi database lokal — 9 Oktober 2026
 
-Semua bukti di folder ini menggunakan **SQL Server 2022 Developer di Docker, database ReplateLocal**, Express API asli, dan production build frontend. Tidak ada fixture store atau interception API dalam demo browser. Bukti ini belum merupakan pengujian Azure SQL/cloud.
+Semua bukti di folder ini menggunakan **SQL Server 2022 Developer di Docker, database ReplateLocal**, Express API asli, dan production build frontend. Tidak ada fixture store atau interception API dalam demo browser. Bukti ini belum merupakan pengujian deployment VPS.
 
 - `api-results.json`: hasil pengujian HTTP serta assertion langsung terhadap SQL melalui Prisma; ID data uji tercatat.
 - `browser-results.json`: hasil QA browser dan ID order yang digunakan pada video/screenshot.

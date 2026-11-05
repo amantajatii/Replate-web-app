@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { clearSession } from '../../../lib/session'
+import CustomerIcon from '../../customer/CustomerIcon'
 
 const navigation = [
   ['dashboard', '/owner/', 'dashboard', 'Ringkasan'],
@@ -12,7 +13,7 @@ const navigation = [
   ['listing', '/owner/listings/', 'listing', 'Listing surplus'],
   ['orders', '/owner/orders/', 'orders', 'Pesanan'],
   ['production', '/owner/production/', 'production', 'Riwayat produksi'],
-  ['insights', '/owner/insights/', 'ai', 'Analitik & AI'],
+  ['insights', '/owner/insights/', 'chart', 'Analitik & AI'],
   ['settings', '/owner/settings/', 'settings', 'Pengaturan restoran'],
 ] as const
 
@@ -41,7 +42,7 @@ export default function MenuShell({
           </div>
         </div>
         <nav aria-label="Navigasi owner">
-          {navigation.map(([key, href, icon, label]) => <Link key={key} className={active === key ? 'active' : ''} aria-current={active === key ? 'page' : undefined} href={href}><Image src={`/listing/${icon}.svg`} alt="" width={20} height={20} />{label}</Link>)}
+          {navigation.map(([key, href, icon, label]) => <Link key={key} className={active === key ? 'active' : ''} aria-current={active === key ? 'page' : undefined} href={href}>{icon === 'chart' ? <CustomerIcon name="chart" /> : <Image src={`/listing/${icon}.svg`} alt="" width={20} height={20} />}{label}</Link>)}
         </nav>
         <div className="menu-bottom">
           <button

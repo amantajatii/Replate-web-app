@@ -1,0 +1,22 @@
+.owner-dashboard { max-width: 1440px; padding: 32px; display: grid; gap: 24px; }
+.dashboard-context { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.dashboard-context div, .dashboard-context label { display: grid; gap: 6px; }
+.dashboard-context span { color: #647267; font-size: 12px; font-weight: 700; letter-spacing: .04em; }
+.dashboard-context select { min-height: 44px; padding: 8px 12px; border: 1px solid #dce3d9; border-radius: 8px; background: white; }
+.dashboard-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+.dashboard-stat, .dashboard-panel { background: white; border: 1px solid #dce3d9; border-radius: 14px; color: #203b2e; }
+.dashboard-stat [data-slot=card-title] { color: #647267; font-size: 13px; }
+.dashboard-stat strong { display: block; font-size: 32px; line-height: 1.2; }
+.dashboard-stat p, .dashboard-panel p, .dashboard-panel small { color: #647267; font-size: 13px; }
+.dashboard-stat p, .dashboard-panel p { margin: 8px 0 0; }
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dashboard-panel [data-slot=card-title] { font-size: 19px; }
+.dashboard-count { display: block; font-size: 24px; }
+.dashboard-panel ul { list-style: none; padding: 0; margin: 18px 0 0; }
+.dashboard-panel li { display: flex; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid #edf0eb; flex-wrap: wrap; }
+.dashboard-panel a { display: inline-flex; min-height: 44px; align-items: center; margin-top: 12px; color: #256044; font-weight: 600; }
+.dashboard-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.dashboard-actions a { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 16px; color: #256044; background: #eaf0e6; border-radius: 9px; font-weight: 600; text-decoration: none; }
+.dashboard-actions a:hover { background: #dce9d8; }
+@media(max-width:900px) { .dashboard-stats { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .owner-dashboard { padding: 24px 20px; } .dashboard-grid { grid-template-columns: 1fr; } .dashboard-actions a { flex: 1 1 180px; justify-content: center; } }

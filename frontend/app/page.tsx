@@ -5,7 +5,7 @@ import CustomerIcon from './customer/CustomerIcon'
 import './landing.css'
 
 export const metadata: Metadata = {
-  title: 'Replate — Makanan baik, kesempatan baru',
+  title: 'Replate | Makanan baik, kesempatan baru',
   description: 'Temukan makanan surplus dari restoran dengan harga lebih hemat. Pesan di Replate dan ambil langsung sesuai jadwal pickup.',
 }
 
@@ -38,7 +38,7 @@ export default function Home() {
             <div className="landing-pickup-note"><CustomerIcon name="pin" /><span>Pesan di Replate. Ambil langsung di restoran.</span></div>
           </div>
           <figure className="landing-hero-photo">
-            <Image src="/menu/veggie.jpg" alt="Semangkuk makanan dengan sayuran, alpukat, dan kacang-kacangan di meja restoran" fill sizes="(max-width: 700px) 90vw, 48vw" loading="eager" unoptimized />
+            <Image src="/menu/veggie.jpg" alt="Semangkuk makanan dengan sayuran, alpukat, dan kacang-kacangan di meja restoran" fill sizes="(max-width: 700px) 90vw, 48vw" loading="eager" fetchPriority="high" unoptimized />
             <figcaption><CustomerIcon name="leaf" /><span>Lebih sedikit terbuang.<br /><strong>Lebih banyak dinikmati.</strong></span></figcaption>
           </figure>
         </section>
@@ -71,7 +71,7 @@ export default function Home() {
 
         <section className="landing-faq landing-width" id="faq" aria-labelledby="faq-title"><div><h2 id="faq-title">Masih penasaran?</h2><p>Kenali Replate sedikit lebih dekat sebelum mulai.</p></div><div className="landing-faq-list">{questions.map(([question, answer]) => <details key={question}><summary>{question}<CustomerIcon name="plus" /></summary><p>{answer}</p></details>)}</div></section>
 
-        <section className="landing-last landing-width" aria-labelledby="last-title"><CustomerIcon name="leaf" /><h2 id="last-title">Makanan baik layak<br />dapat kesempatan kedua.</h2><p>Mulai dari satu porsi yang kamu pilih hari ini.</p><Link href="/register/" className="landing-button">Mulai bersama Replate <CustomerIcon name="share" /></Link></section>
+        <section className="landing-last landing-width" aria-labelledby="last-title"><CustomerIcon name="leaf" /><h2 id="last-title">Makanan baik layak<br />dapat kesempatan kedua.</h2><p>Mulai dari satu porsi yang kamu pilih hari ini.</p><Link href="/register/" className="landing-button">Buat akun Replate <CustomerIcon name="share" /></Link></section>
       </main>
 
       <footer className="landing-footer landing-width"><div><Link href="/" className="landing-brand"><Image src="/Replate-logo.png" alt="" width={40} height={40} unoptimized /><span>Replate</span></Link><p>Makanan baik, lebih sedikit terbuang.</p></div><nav aria-label="Navigasi footer"><a href="#cara-kerja">Cara kerja</a><a href="#mitra">Jadi mitra</a><Link href="/login/">Masuk</Link><a href="#beranda">Kembali ke atas <CustomerIcon name="share" /></a></nav><small>Replate · Setiap porsi punya kesempatan.</small></footer>

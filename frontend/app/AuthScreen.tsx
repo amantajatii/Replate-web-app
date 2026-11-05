@@ -173,7 +173,7 @@ export default function AuthScreen({ mode }: { mode: Mode }) {
         {(isLogin || isRegister) && <aside className="auth-story" aria-label="Tentang Replate">
           <Link href="/" className="auth-story-brand"><Image src="/Replate-logo.png" alt="" width={46} height={46} unoptimized /><strong>Replate</strong></Link>
           <div className="auth-story-copy"><h2>Makanan baik.<br />Kesempatan baru.</h2><p>Hubungkan makanan surplus yang masih layak dengan orang yang ingin menikmatinya.</p></div>
-          <div className="auth-story-photo"><Image src="/menu/veggie.jpg" alt="Semangkuk makanan dengan sayuran segar" fill sizes="(max-width: 899px) 1px, 440px" unoptimized /></div>
+          <div className="auth-story-photo"><picture><source media="(min-width: 900px)" srcSet="/menu/veggie.jpg" /><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="Semangkuk makanan dengan sayuran segar" width={720} height={450} loading="eager" fetchPriority="high" /></picture></div>
           <p className="auth-story-note"><CustomerIcon name="leaf" />Lebih sedikit terbuang, lebih banyak dinikmati.</p>
         </aside>}
       <div className="auth-shell">

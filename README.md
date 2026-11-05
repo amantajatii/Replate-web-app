@@ -35,9 +35,13 @@ Harga, pickup code, jumlah, dan data dashboard menggunakan tabular numbers.
 Replate-web-app/
 ├── frontend/   # Next.js static frontend → Caddy di VPS
 ├── backend/    # Express REST API + Prisma → Docker di VPS
+├── AI/         # Pipeline analitik dan rekomendasi produksi
+├── deploy/     # Docker Compose, Caddy, dan timer batch
 ├── diagram/    # ERD, use case, dan wireframe
 └── docs/       # Dokumentasi proyek
 ```
+
+[Diagram arsitektur dan alur data](diagram/cloud-architecture/README.md) menjelaskan hubungan frontend, API, database, dan batch AI.
 
 Database menggunakan SQL Server secara lokal maupun pada rancangan deployment VPS. Frontend hanya berkomunikasi dengan database melalui REST API.
 
@@ -45,7 +49,7 @@ Foto menu diunggah melalui backend dan disimpan sebagai berkas di direktori `MEN
 
 ## Analitik & AI
 
-Halaman owner **Analitik & AI** menampilkan produksi, surplus, dan rekomendasi tersimpan. Pipeline Python memakai evaluasi berdasarkan urutan waktu dan pembanding weekday. [Panduan dan demo sintetis](AI/README.md) · [Deployment VPS](deploy/README.md). Tidak memerlukan Azure.
+Halaman owner **Analitik & AI** menampilkan produksi, surplus, dan rekomendasi tersimpan. Pipeline Python memakai evaluasi berdasarkan urutan waktu dan pembanding weekday. [Panduan dan demo sintetis](AI/README.md) · [Deployment VPS](deploy/README.md).
 
 ## Menjalankan aplikasi
 

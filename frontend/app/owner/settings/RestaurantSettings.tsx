@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { apiUrl } from '../../../lib/api'
+import { pickupMapUrl } from '../../../lib/restaurant-location'
 import MenuShell from '../menu/MenuShell'
 import OwnerChoiceGroup from '../OwnerChoiceGroup'
 import CustomerIcon from '../../customer/CustomerIcon'
@@ -50,7 +51,7 @@ const empty: Restaurant = {
   notifyEmail: true,
   notifyPush: true,
 }
-type Tab = 'profile' | 'hours' | 'notifications' | 'security'
+type Tab = 'profile' | 'hours' | 'security'
 
 function token() {
   for (const storage of [sessionStorage, localStorage]) {
@@ -242,10 +243,9 @@ export default function RestaurantSettings() {
             </button>
           </div>
         </div>
-        <OwnerChoiceGroup<Tab> tabs label="Pengaturan restoran" className="rs-tabs" value={tab} onChange={setTab} options={[
+        <OwnerChoiceGroup<Tab> tabs idPrefix="restaurant-settings" label="Pengaturan restoran" className="rs-tabs" value={tab} onChange={setTab} options={[
           { value: 'profile', label: 'Profil & lokasi' },
           { value: 'hours', label: 'Jam & pickup' },
-          { value: 'notifications', label: 'Notifikasi' },
           { value: 'security', label: 'Akun & keamanan' },
         ]} />
         {loading ? (
@@ -268,6 +268,8 @@ export default function RestaurantSettings() {
                 {message}
               </p>
             )}
+            {(['profile', 'hours', 'security'] as const).filter(panel => panel !== tab).map(panel => <div key={panel} role="tabpanel" id={`restaurant-settings-panel-${panel}`} aria-labelledby={`restaurant-settings-tab-${panel}`} hidden />)}
+            <div role="tabpanel" id={`restaurant-settings-panel-${tab}`} aria-labelledby={`restaurant-settings-tab-${tab}`} tabIndex={0}>
             {tab === 'profile' && (
               <>
                 <section className="rs-card">
@@ -471,8 +473,7 @@ export default function RestaurantSettings() {
                       <div className="rs-coords">
                         Koordinat GPS{' '}
                         <strong>
-                          {restaurant.latitude ?? '—'},{' '}
-                          {restaurant.longitude ?? '—'}
+                          {restaurant.latitude !== null && restaurant.longitude !== null ? `${restaurant.latitude}, ${restaurant.longitude}` : 'Belum diatur'}
                         </strong>
                       </div>
                     </div>
@@ -480,20 +481,20 @@ export default function RestaurantSettings() {
                       <label className="rs-label">
                         Lokasi pickup
                       </label>
-                      <div
-                        className="rs-map"
-                        style={{ backgroundImage: 'url(/restaurant/map.png)' }}
-                      >
-                        <span>●　{restaurant.name || 'Titik Pickup'}</span>
+                      <div className="rs-pickup-location">
+                        <p>{restaurant.address || 'Alamat pickup belum diisi.'}</p>
+                        {pickupMapUrl(restaurant.latitude, restaurant.longitude) ? <a href={pickupMapUrl(restaurant.latitude, restaurant.longitude)!} target="_blank" rel="noopener noreferrer">Buka koordinat di Google Maps (tab baru)</a> : <p>Isi kedua koordinat untuk membuka lokasi di peta.</p>}
                         <button
                           type="button"
+                          aria-expanded={editingPin}
+                          aria-controls={editingPin ? 'pickup-coordinates' : undefined}
                           onClick={() => setEditingPin(!editingPin)}
                         >
                           Ubah koordinat
                         </button>
                       </div>
                       {editingPin && (
-                        <div className="rs-two rs-pin">
+                        <div className="rs-two rs-pin" id="pickup-coordinates">
                           <label>
                             Latitude
                             <input
@@ -601,34 +602,6 @@ export default function RestaurantSettings() {
                 </label>
               </section>
             )}
-            {tab === 'notifications' && (
-              <section className="rs-card">
-                <header>
-                  <h2>Preferensi Notifikasi</h2>
-                  <p>Pilih cara menerima pemberitahuan terkait restoran.</p>
-                </header>
-                <label className="rs-check">
-                  <input
-                    type="checkbox"
-                    checked={restaurant.notifyEmail}
-                    onChange={(event) =>
-                      change('notifyEmail', event.target.checked)
-                    }
-                  />{' '}
-                  Notifikasi email
-                </label>
-                <label className="rs-check">
-                  <input
-                    type="checkbox"
-                    checked={restaurant.notifyPush}
-                    onChange={(event) =>
-                      change('notifyPush', event.target.checked)
-                    }
-                  />{' '}
-                  Notifikasi aplikasi
-                </label>
-              </section>
-            )}
             {tab === 'security' && (
               <section className="rs-card">
                 <header>
@@ -642,6 +615,7 @@ export default function RestaurantSettings() {
                 <Link href="/forgot-password/">Atur ulang kata sandi →</Link>
               </section>
             )}
+            </div>
           </form>
         )}
       </section>
