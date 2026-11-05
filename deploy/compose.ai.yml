@@ -1,0 +1,17 @@
+# Add to the existing VPS application Compose project, whose API service is named api.
+# docker compose -f deploy/compose.vps.yml -f deploy/compose.ai.yml run --rm ai
+services:
+  ai:
+    build:
+      context: ../AI
+    profiles: [jobs]
+    environment:
+      AI_API_URL: http://api:5000
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY:?Set a private shared batch key}
+    volumes:
+      - ai-reports:/reports
+    mem_limit: 768m
+    cpus: 1
+    restart: "no"
+volumes:
+  ai-reports:

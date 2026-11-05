@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Replate forecast at 02:00 Jakarta time
+
+[Timer]
+OnCalendar=*-*-* 02:00:00 Asia/Jakarta
+Persistent=true
+Unit=replate-ai.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,13 @@
+{$SITE_ADDRESS} {
+    handle /api/internal/* {
+        respond 404
+    }
+    @backend path /api/* /uploads/* /menu-uploads/*
+    handle @backend {
+        reverse_proxy api:5000
+    }
+    handle {
+        root * /srv
+        file_server
+    }
+}

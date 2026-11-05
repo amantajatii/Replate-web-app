@@ -1,0 +1,10 @@
+[Unit]
+Description=Replate daily production recommendations
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/replate
+ExecStart=/usr/bin/docker compose --env-file .env.vps -f deploy/compose.vps.yml -f deploy/compose.ai.yml run --rm --no-deps ai
+TimeoutStartSec=30min
